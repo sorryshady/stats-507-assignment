@@ -1,16 +1,17 @@
 from dataclasses import dataclass
-from typing import Tuple, List
+from typing import List, Tuple, Optional
 
 
 @dataclass
 class DetectionResult:
     """
-    A standard object representing a single detected item.
+    Standardized representation of a detected object.
     """
 
     label: str
     confidence: float
-    box: Tuple[float, float, float, float]  # x1, y1, x2, y2
+    box: Tuple[int, int, int, int]  # (x1, y1, x2, y2)
+    track_id: Optional[int] = None  # Unique ID for tracking (e.g., Person #1)
 
 
 @dataclass

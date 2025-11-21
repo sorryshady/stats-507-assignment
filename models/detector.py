@@ -35,7 +35,10 @@ class YOLODetector(BaseModel):
         if not self.model:
             raise RuntimeError("Model not loaded. Call load_model() first.")
 
-        results = self.model(image, conf=threshold, verbose=False, device=self.device)
+        # results = self.model(image, conf=threshold, verbose=False, device=self.device)
+        results = self.model.track(
+            image, conf=threshold, persist=True, device=self.device, verbose=False
+        )
         result = results[0]
 
         detections = []
@@ -45,10 +48,14 @@ class YOLODetector(BaseModel):
             confidence = box.conf[0].item()
             coords = box.xyxy[0].tolist()
             x1, y1, x2, y2 = map(int, coords)
+            track_id = int(box.id[0].item()) if box.id is not None else None
 
             detections.append(
                 DetectionResult(
-                    label=label, confidence=confidence, box=(x1, y1, x2, y2)
+                    label=label,
+                    confidence=confidence,
+                    box=(x1, y1, x2, y2),
+                    track_id=track_id,  # <--- Pass it here
                 )
             )
 

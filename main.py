@@ -10,31 +10,31 @@ def main():
         "conf_threshold": 0.5,
         "cap_model": "Salesforce/blip-image-captioning-base",
     }
-    print("=" * 40)
-    print("Initializing Scene Composer...")
-    print("=" * 40)
-    composer = SceneComposer(config)
+    composer = SceneComposer(config=config)
 
+    # Simulating a video feed (just re-using one image for demo)
     image_path = "test_images/test_image_0.jpg"
-    if not os.path.exists(image_path):
-        print(f"Error: Test image not found at {image_path}")
-        # Create a dummy file prompt or download logic could go here
-        return
-    print("=" * 40)
-    print(f"\nProcessing {image_path}...")
-    # Measure Speed
-    start = time.time()
-    result = composer.describe_scene(image_path)
-    end = time.time()
 
-    print("\n" + "=" * 50)
-    print(f"🗣️  FINAL AUDIO OUTPUT")
-    print("=" * 50)
-    print(f"\"{result['text']}\"")
-    print("=" * 50)
+    print("🚀 Starting Navigation System...")
+    print("   [Loop running at 30FPS] Scanning for hazards...")
 
-    print(f"\n⚡ Processing Time: {end - start:.2f} seconds")
-    print(f"FPS: {1.0 / (end - start):.2f}")
+    # --- 1. THE REFLEX LOOP (Fast) ---
+    # In a real app, this runs constantly on the video feed
+    # We only use the 'detector' part of the composer
+    detections = composer.detector.predict(image_path)
+
+    # Immediate Safety Check
+    hazards = [d for d in detections if d.label in ["bus", "car", "truck"]]
+    if hazards:
+        print(f"⚠️  WARNING: {len(hazards)} vehicle(s) detected!")
+
+    # --- 2. THE BRAIN LOOP (Slow/On-Demand) ---
+    # User presses a button -> "What am I looking at?"
+    print("\n[User Input] 'Describe scene' button pressed...")
+
+    # Now we run the heavy full description
+    full_analysis = composer.describe_scene(image_path)
+    print(f"🤖 Audio: \"{full_analysis['text']}\"")
 
 
 if __name__ == "__main__":

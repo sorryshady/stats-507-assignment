@@ -1,46 +1,48 @@
-# core/narrator.py
-from collections import Counter
 from core.types import SceneAnalysis
 
 
 class Narrator:
     def generate_description(self, scene: SceneAnalysis) -> str:
-        """
-        Synthesizes object data and captions into a natural language description.
-        """
         if not scene.detections:
-            return f"I don't see any specific objects, but the scene looks like {scene.caption}."
+            return f"The scene is mostly clear. It looks like {scene.caption}."
 
-        # 1. Summarize Counts (e.g., "3 persons, 1 bus")
-        counts = Counter([d.label for d in scene.detections])
-        object_summary = ", ".join(
-            [
-                f"{count} {label}{'s' if count > 1 else ''}"
-                for label, count in counts.items()
-            ]
+        # 1. Analyze Main Subject (Largest Box = Closest)
+        # Sort by Area (width * height)
+        sorted_objs = sorted(
+            scene.detections,
+            key=lambda x: (x.box[2] - x.box[0]) * (x.box[3] - x.box[1]),
+            reverse=True,
         )
+        main_obj = sorted_objs[0]
 
-        # 2. Analyze Spatial Layout (Simple Logic)
-        # We look at the first detection (highest confidence) to give immediate warning
-        main_obj = scene.detections[0]
+        # 2. Determine Spatial Position of Main Subject
+        img_center = 320  # Assuming 640 width
+        obj_center = (main_obj.box[0] + main_obj.box[2]) / 2
 
-        # Calculate center of the box to determine Left/Center/Right
-        img_center_x = 320  # Assuming 640x640 image, middle is 320
-        box_center_x = (main_obj.box[0] + main_obj.box[2]) / 2
-
-        if box_center_x < img_center_x - 100:
-            position = "on your left"
-        elif box_center_x > img_center_x + 100:
-            position = "on your right"
+        if obj_center < img_center - 150:
+            pos = "to your left"
+        elif obj_center > img_center + 150:
+            pos = "to your right"
         else:
-            position = "directly ahead"
+            pos = "directly in front of you"
 
-        # 3. Fusion Template
-        # "I see [Objects]. [Main Object] is [Position]. Context: [Caption]"
-        text = (
-            f"I see {object_summary}. "
-            f"The {main_obj.label} is {position}. "
-            f"Overall, it looks like {scene.caption}."
-        )
+        # 3. Check for Crowds (Heuristic)
+        people_count = sum(1 for d in scene.detections if d.label == "person")
 
-        return text
+        # 4. Construct the Narrative
+        intro = ""
+        if main_obj.label == "person":
+            if people_count > 1:
+                intro = f"There is a group of {people_count} people {pos}."
+            else:
+                intro = f"There is a person {pos}."
+        else:
+            intro = f"There is a {main_obj.label} {pos}."
+
+        # 5. Add Context from BLIP, but make it flow
+        # We strip "a " or "an " from the start of the caption to blend it
+        clean_caption = scene.caption.replace(
+            "arafed ", ""
+        ).strip()  # 'arafed' is a common BLIP artifact
+
+        return f"{intro} The general scene appears to be {clean_caption}."
