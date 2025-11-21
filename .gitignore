@@ -46,7 +46,6 @@ Thumbs.db
 *.pth
 *.onnx
 *.weights
-models/
 checkpoints/
 
 # Data
