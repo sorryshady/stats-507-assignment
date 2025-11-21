@@ -1,11 +1,14 @@
 import os
+import time
 from core.scene_composer import SceneComposer
+from models.captioner import BlipCaptioner
 
 
 def main():
     config = {
         "model_path": "yolo11n.pt",
         "conf_threshold": 0.5,
+        "cap_model": "Salesforce/blip-image-captioning-base",
     }
     print("=" * 40)
     print("Initializing Scene Composer...")
@@ -19,16 +22,19 @@ def main():
         return
     print("=" * 40)
     print(f"\nProcessing {image_path}...")
-    detections = composer.describe_scene(image_path)
+    # Measure Speed
+    start = time.time()
+    result = composer.describe_scene(image_path)
+    end = time.time()
 
-    print(f"\nSuccessfully detected {len(detections)} objects:")
-    print("-" * 40)
-    for item in detections:
-        # We can access .label, .confidence, .box because of our Dataclass!
-        print(
-            f"• {item.label.ljust(10)} | Conf: {item.confidence:.2f} | Box: {item.box}"
-        )
-    print("-" * 40)
+    print("\n" + "=" * 50)
+    print(f"🗣️  FINAL AUDIO OUTPUT")
+    print("=" * 50)
+    print(f"\"{result['text']}\"")
+    print("=" * 50)
+
+    print(f"\n⚡ Processing Time: {end - start:.2f} seconds")
+    print(f"FPS: {1.0 / (end - start):.2f}")
 
 
 if __name__ == "__main__":

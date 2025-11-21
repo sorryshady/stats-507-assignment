@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 
-class AIModel(ABC):
+class BaseModel(ABC):
     """
     Abstract class that defines the interface for all AI models in this project.
     """

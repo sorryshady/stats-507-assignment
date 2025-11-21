@@ -1,11 +1,11 @@
 import torch
 from typing import List, Any, Optional
 from ultralytics import YOLO
-from .base import AIModel
+from .base import BaseModel
 from core.types import DetectionResult
 
 
-class YOLODetector(AIModel):
+class YOLODetector(BaseModel):
     def __init__(self, model_path: str = "yolo11n.pt", conf_threshold: float = 0.5):
         self.conf_threshold = conf_threshold
         # Device selection
