@@ -1,0 +1,39 @@
+# Core ML & Deep Learning
+torch==2.6.0
+torchvision==0.21.0
+ultralytics==8.3.229  
+transformers==4.57.1  
+
+# Computer Vision
+opencv-python==4.11.0.86
+pillow==10.2.0
+
+# Data Processing
+numpy==1.26.4
+pandas==2.2.2
+
+# Backend API
+fastapi==0.120.2
+uvicorn==0.37.0
+python-multipart==0.0.20  
+websockets==15.0.1
+
+# Text-to-Speech
+pyttsx3==2.99  
+sentencepiece==0.2.1  
+
+# Utilities
+psutil==6.1.1
+python-dotenv==1.1.1
+
+# Visualization & Analysis
+matplotlib==3.8.4
+seaborn==0.13.2
+
+# Development & Notebooks
+jupyter==1.1.1   
+ipykernel==7.1.0
+notebook==7.5.0  
+
+# Optional: For dataset handling
+datasets==4.4.1  
