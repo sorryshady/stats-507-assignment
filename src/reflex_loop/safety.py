@@ -84,18 +84,24 @@ class SafetyMonitor:
             is_expanding = area_growth > (EXPANSION_THRESHOLD * 100)  # Convert to percentage
             is_shrinking = area_growth < -(EXPANSION_THRESHOLD * 100)  # Shrinking = leaving
             
-            # Step 4: Movement Check - Is it moving significantly?
+            # Step 4: Check if object center is moving toward frame center (approaching camera)
+            # This distinguishes "person approaching" from "person moving hands while stationary"
+            is_approaching_center = self.physics_engine.is_approaching_center(
+                tracked_obj, self.frame_width, self.frame_height
+            )
+            
+            # Step 5: Movement Check - Is it moving significantly?
             # Get velocity to check if object is moving (need at least 2 frames)
             velocity_x, velocity_y = self.physics_engine.calculate_velocity(tracked_obj)
             speed = (velocity_x ** 2 + velocity_y ** 2) ** 0.5
-            is_moving = speed > 2.0  # Threshold: 2 pixels per frame
+            is_moving = speed > 5.0  # Threshold: 5 pixels per frame (increased to reduce false positives from minor movements)
             
             # Determine hazard priority
             # Only trigger hazard if object is:
-            # 1. Expanding (approaching) AND in center zone - HIGH priority
-            # 2. Expanding (approaching) but not in center zone - MEDIUM priority
+            # 1. Expanding (area growing) AND moving toward center (approaching camera) AND in center zone - HIGH priority
+            # 2. Expanding AND moving toward center but not in center zone - MEDIUM priority
             # Do NOT trigger if shrinking (leaving) - that's safe!
-            # Do NOT trigger just for moving in center zone - too many false positives
+            # Do NOT trigger if just expanding without moving toward center (hand movements, etc.)
             
             priority = None
             reasons = []
@@ -104,9 +110,10 @@ class SafetyMonitor:
                 # Object is shrinking = leaving = NOT a hazard, skip
                 continue
             
-            if is_expanding:
-                # Object is growing = approaching = hazard
-                reasons.append(f"approaching ({area_growth:.1f}% growth)")
+            # Require BOTH expansion AND movement toward center to avoid false positives from hand movements
+            if is_expanding and is_approaching_center:
+                # Object is growing AND moving toward camera = real approaching hazard
+                reasons.append(f"approaching ({area_growth:.1f}% growth, moving toward center)")
                 if in_zone:
                     # Approaching AND in center zone = high priority
                     priority = "high"

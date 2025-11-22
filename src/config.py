@@ -5,20 +5,23 @@ HISTORY_BUFFER_SIZE = 90  # 90 frames at 30 FPS = 3 seconds
 
 # Safety Zone Configuration
 CENTER_ZONE_THRESHOLD = 0.4  # 40% center of frame
-EXPANSION_THRESHOLD = 0.1  # 10% growth triggers warning
-EXPANSION_TIME_WINDOW = 0.5  # 0.5 seconds for expansion check
+EXPANSION_THRESHOLD = 0.25  # 25% growth triggers warning (increased to reduce false positives from minor movements)
+EXPANSION_TIME_WINDOW = (
+    1.0  # 1.0 seconds for expansion check (increased to require sustained growth)
+)
 
 # Hazard Classes (COCO class names)
 HAZARD_CLASSES = ["car", "truck", "bus", "bicycle", "motorcycle", "person"]
 
 # Camera Configuration
-CAMERA_DEVICE_ID = 0  # Default webcam, adjust for iPhone
+CAMERA_DEVICE_ID = 1  # Default webcam, adjust for iPhone
 CAMERA_FPS = 30
 CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720
 
 # Model Paths
 YOLO_MODEL_PATH = "yolo11n.pt"
+YOLO_CONFIDENCE_THRESHOLD = 0.7  # Minimum confidence to track objects
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-base"
 
 # Ollama Configuration
@@ -30,9 +33,11 @@ OLLAMA_MODEL = "llama3.2:3b"
 # Audio Configuration
 BEEP_FREQUENCY = 800  # Hz
 BEEP_DURATION = 0.2  # seconds
-TTS_RATE = 180  # words per minute (faster = more natural)
+TTS_RATE = 220  # words per minute (faster = more natural, typical range: 150-250)
 BEEP_COOLDOWN = 1.0  # Minimum seconds between beeps (reduced spam)
-HAZARD_BEEP_COOLDOWN = 2.0  # Minimum seconds between hazard beeps
+HAZARD_BEEP_COOLDOWN = (
+    3.0  # Minimum seconds between hazard beeps (increased to reduce spam)
+)
 
 # Threading Configuration
 REFLEX_LOOP_FPS = 30

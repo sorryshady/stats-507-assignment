@@ -1,15 +1,31 @@
 """Audio output handler for beeps and TTS."""
 
-import pyttsx3
+import queue
 import threading
 import time
 import logging
 import sys
 import os
+from dataclasses import dataclass
+from enum import IntEnum
 
 from src.config import BEEP_FREQUENCY, BEEP_DURATION, TTS_RATE, BEEP_COOLDOWN, HAZARD_BEEP_COOLDOWN
 
 logger = logging.getLogger(__name__)
+
+
+class SpeechPriority(IntEnum):
+    """Priority levels for speech queue."""
+    LOW = 1  # Regular narration
+    HIGH = 2  # Hazard warnings
+
+
+@dataclass
+class SpeechRequest:
+    """Represents a speech request in the queue."""
+    text: str
+    priority: SpeechPriority
+    timestamp: float
 
 
 class AudioHandler:
@@ -18,20 +34,77 @@ class AudioHandler:
     def __init__(self):
         """Initialize audio handler."""
         self.tts_engine = None
-        self._init_tts()
+        
+        # Queue system for speech
+        self.speech_queue = queue.PriorityQueue()  # Lower number = higher priority
+        self.speech_worker_thread = None
+        self.speech_worker_running = False
+        
         self.audio_lock = threading.Lock()
         self.last_beep_time = 0
         self.beep_cooldown = BEEP_COOLDOWN
         self.last_hazard_beep_time = 0  # Track hazard beeps separately
         self.hazard_beep_cooldown = HAZARD_BEEP_COOLDOWN
         self.sounddevice_available = False
-        self.tts_speaking = False  # Track if TTS is currently speaking
         self.beep_playing = False  # Track if beep is currently playing
+        
+        # Initialize TTS (pyttsx3)
+        self._init_tts()
+        
         self._init_sounddevice()
+        
+        # Start speech worker thread
+        self._start_speech_worker()
     
-    def _init_tts(self):
-        """Initialize TTS engine."""
+    def _init_piper_tts(self):
+        """Initialize Piper TTS engine (fast, high quality, local)."""
         try:
+            # We'll use a subprocess to call piper CLI if installed
+            # Or use the python bindings if available
+            import shutil
+            
+            # Check for piper executable
+            piper_path = shutil.which("piper")
+            
+            if piper_path:
+                logger.info(f"Found Piper TTS executable at: {piper_path}")
+                self.use_piper = True
+                self.piper_path = piper_path
+                # We need a model - check if one exists or download one
+                self.piper_model = "en_US-lessac-medium.onnx"
+                self._ensure_piper_model()
+            else:
+                # Try python package
+                try:
+                    import piper
+                    logger.info("Piper Python package found (placeholder)")
+                    # The python package might differ in usage, stick to CLI if possible
+                    self.use_piper = False 
+                except ImportError:
+                    self.use_piper = False
+                    logger.info("Piper TTS not found. Install with: pip install piper-tts or download binary")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Piper TTS: {e}")
+            self.use_piper = False
+
+    def _ensure_piper_model(self):
+        """Ensure a Piper model is available."""
+        import os
+        import requests
+        
+        model_name = "en_US-lessac-medium.onnx"
+        json_name = "en_US-lessac-medium.onnx.json"
+        
+        if not os.path.exists(model_name):
+            logger.info(f"Downloading Piper model: {model_name}...")
+            # Download model logic here (simplified for now)
+            # For now, we'll assume user needs to download it or we provide instructions
+            pass
+
+    def _init_tts(self):
+        """Initialize pyttsx3 TTS engine (fallback)."""
+        try:
+            import pyttsx3
             self.tts_engine = pyttsx3.init()
             
             # Set speech rate (faster = more natural)
@@ -63,9 +136,9 @@ class AudioHandler:
             # Set volume (0.0 to 1.0)
             self.tts_engine.setProperty('volume', 0.9)
             
-            logger.info("TTS engine initialized")
+            logger.info("pyttsx3 TTS engine initialized (fallback)")
         except Exception as e:
-            logger.warning(f"Failed to initialize TTS engine: {e}")
+            logger.warning(f"Failed to initialize pyttsx3 TTS engine: {e}")
             self.tts_engine = None
     
     def _init_sounddevice(self):
@@ -147,108 +220,148 @@ class AudioHandler:
         thread = threading.Thread(target=_beep, daemon=True)
         thread.start()
     
+    def _start_speech_worker(self):
+        """Start the speech worker thread that processes the queue."""
+        if self.speech_worker_running:
+            return
+        
+        self.speech_worker_running = True
+        
+        def _speech_worker():
+            """Worker thread that processes speech queue sequentially."""
+            logger.info("Speech worker thread started")
+            while self.speech_worker_running:
+                try:
+                    # Get next speech request (blocks until available)
+                    # PriorityQueue returns lowest priority value first
+                    # Format: (priority_value, request)
+                    priority_value, request = self.speech_queue.get(timeout=1.0)
+                    
+                    # Wait for beep to finish if it's playing (beeps are prioritized)
+                    if self.beep_playing:
+                        logger.debug(f"Beep playing, waiting before speaking: {request.text[:50]}...")
+                        max_wait = 0.5  # Max wait time (beeps are usually ~0.2s)
+                        wait_time = 0
+                        while self.beep_playing and wait_time < max_wait:
+                            time.sleep(0.05)  # Check every 50ms
+                            wait_time += 0.05
+                    
+                    # Process the speech request
+                    logger.info(f"Processing speech request (priority={request.priority.name}): {request.text[:50]}...")
+                    self._process_speech(request.text)
+                    
+                    # Mark task as done
+                    self.speech_queue.task_done()
+                    
+                except queue.Empty:
+                    # Timeout - check if we should continue
+                    continue
+                except Exception as e:
+                    logger.error(f"Error in speech worker thread: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
+        
+        self.speech_worker_thread = threading.Thread(target=_speech_worker, daemon=True)
+        self.speech_worker_thread.start()
+        logger.info("Speech worker thread initialized")
+    
     def speak_text(self, text: str, priority: bool = False):
         """
-        Speak text using TTS with fallback to macOS say command.
-        Will wait for beeps to finish before speaking (beeps are prioritized).
+        Queue text for speech using TTS.
+        Speech requests are queued and processed sequentially.
         
         Args:
             text: Text to speak
-            priority: If True, queues for immediate playback (but doesn't interrupt current speech)
+            priority: If True, uses HIGH priority (hazard warnings), otherwise LOW (narration)
         """
         if not text or not text.strip():
             logger.warning("Empty text provided to speak_text")
             return
         
-        # Wait for beep to finish if it's playing (beeps are prioritized)
-        if self.beep_playing:
-            logger.debug(f"Beep playing, waiting before speaking: {text[:50]}...")
-            # Wait a bit for beep to finish (beep duration is short)
-            import time
-            max_wait = 0.5  # Max wait time (beeps are usually ~0.2s)
-            wait_time = 0
-            while self.beep_playing and wait_time < max_wait:
-                time.sleep(0.05)  # Check every 50ms
-                wait_time += 0.05
+        # Determine priority level
+        priority_level = SpeechPriority.HIGH if priority else SpeechPriority.LOW
         
-        # Check if TTS is currently speaking - skip if busy (even priority messages)
-        # This prevents cutting off mid-sentence
-        if self.tts_speaking:
-            logger.debug(f"TTS busy, skipping message: {text[:50]}...")
-            return
+        # Create speech request
+        request = SpeechRequest(
+            text=text,
+            priority=priority_level,
+            timestamp=time.time()
+        )
         
-        # Set flag BEFORE starting thread to prevent race condition
-        # Use lock to make this atomic
-        with self.audio_lock:
-            if self.tts_speaking:
-                logger.debug(f"TTS started speaking, skipping: {text[:50]}...")
-                return
-            self.tts_speaking = True
+        # Add to queue (lower number = higher priority, so HIGH=2 comes before LOW=1)
+        # We invert priority so HIGH priority gets lower queue number
+        queue_priority = -priority_level.value
         
-        def _speak_pyttsx3():
-            """Try pyttsx3 first."""
-            try:
-                if self.tts_engine is None:
-                    raise RuntimeError("TTS engine not initialized")
-                
-                logger.info(f"TTS thread started, speaking: {text[:80]}...")
-                with self.audio_lock:
-                    logger.info(f"Calling TTS engine.say()...")
-                    self.tts_engine.say(text)
-                    logger.info("Calling TTS engine.runAndWait()...")
-                    self.tts_engine.runAndWait()
-                    logger.info("TTS finished speaking successfully")
-            except Exception as e:
-                logger.warning(f"pyttsx3 failed: {e}")
-                raise
-            finally:
-                # Always clear flag when done
-                with self.audio_lock:
-                    self.tts_speaking = False
-        
-        def _speak_system():
-            """Fallback to macOS say command."""
-            try:
-                import subprocess
-                logger.info("Using macOS 'say' command as fallback...")
-                # Use say command with a clear voice
-                subprocess.run(
-                    ['say', '-v', 'Samantha', text],  # Try Samantha voice, fallback to default
-                    check=True,
-                    timeout=30
-                )
-                logger.info("System say command completed successfully")
-            except subprocess.TimeoutExpired:
-                logger.error("System say command timed out")
-            except FileNotFoundError:
-                logger.error("macOS 'say' command not found")
-            except Exception as e:
-                logger.error(f"System say command failed: {e}")
-            finally:
-                # Always clear flag when done
-                with self.audio_lock:
-                    self.tts_speaking = False
-        
-        def _speak():
-            """Try pyttsx3, fallback to system say."""
-            try:
-                _speak_pyttsx3()
-            except Exception:
-                # Fallback to system say command
-                logger.warning("Falling back to macOS system 'say' command...")
-                _speak_system()
-        
-        # Run in separate thread to avoid blocking
-        logger.info(f"Starting TTS thread for: {text[:50]}...")
-        thread = threading.Thread(target=_speak, daemon=True)
-        thread.start()
-        logger.info(f"TTS thread started (daemon={thread.daemon})")
+        try:
+            self.speech_queue.put((queue_priority, request), block=False)
+            logger.debug(f"Queued speech request (priority={priority_level.name}): {text[:50]}...")
+        except queue.Full:
+            logger.warning("Speech queue is full, dropping request")
+    
+    def _process_speech(self, text: str):
+        """Process a single speech request using available TTS engine."""
+        if self.tts_engine is not None:
+            self._speak_pyttsx3(text)
+        else:
+            self._speak_system(text)
+    
+    def _speak_pyttsx3(self, text: str):
+        """Speak using pyttsx3."""
+        try:
+            import pyttsx3
+            if self.tts_engine is None:
+                raise RuntimeError("TTS engine not initialized")
+            
+            logger.info(f"Speaking with pyttsx3: {text[:80]}...")
+            self.tts_engine.say(text)
+            self.tts_engine.runAndWait()
+            logger.info("pyttsx3 finished speaking successfully")
+        except Exception as e:
+            logger.warning(f"pyttsx3 failed: {e}")
+            # Fallback to system say
+            logger.info("Falling back to system say...")
+            self._speak_system(text)
+    
+    def _speak_system(self, text: str):
+        """Fallback to macOS say command."""
+        try:
+            import subprocess
+            logger.info("Using macOS 'say' command as fallback...")
+            subprocess.run(
+                ['say', '-v', 'Samantha', text],
+                check=True,
+                timeout=30
+            )
+            logger.info("System say command completed successfully")
+        except subprocess.TimeoutExpired:
+            logger.error("System say command timed out")
+        except FileNotFoundError:
+            logger.error("macOS 'say' command not found")
+        except Exception as e:
+            logger.error(f"System say command failed: {e}")
     
     def stop(self):
-        """Stop any ongoing audio output."""
+        """Stop any ongoing audio output and worker thread."""
+        # Stop speech worker
+        self.speech_worker_running = False
+        
+        # Clear queue
+        while not self.speech_queue.empty():
+            try:
+                self.speech_queue.get_nowait()
+                self.speech_queue.task_done()
+            except queue.Empty:
+                break
+        
+        # Stop TTS engines
         if self.tts_engine is not None:
             try:
+                import pyttsx3
                 self.tts_engine.stop()
             except Exception:
                 pass
+        
+        # Wait for worker thread to finish
+        if self.speech_worker_thread is not None:
+            self.speech_worker_thread.join(timeout=2.0)
 

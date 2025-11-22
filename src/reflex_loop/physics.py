@@ -120,6 +120,46 @@ class PhysicsEngine:
         return in_zone
     
     @staticmethod
+    def is_approaching_center(tracked_object: TrackedObject, frame_width: int, frame_height: int) -> bool:
+        """
+        Check if object center is moving toward the frame center (approaching camera).
+        This helps distinguish between "person approaching" vs "person moving hands while stationary".
+        
+        Args:
+            tracked_object: TrackedObject with detection history
+            frame_width: Frame width in pixels
+            frame_height: Frame height in pixels
+        
+        Returns:
+            True if object center is moving toward frame center
+        """
+        history = tracked_object.get_trajectory()
+        if len(history) < 2:
+            return False
+        
+        # Get first and last detection points
+        first = history[0]
+        last = history[-1]
+        
+        # Calculate frame center
+        frame_center_x = frame_width / 2
+        frame_center_y = frame_height / 2
+        
+        # Calculate distance from object center to frame center
+        first_dist_x = abs(first.center[0] - frame_center_x)
+        first_dist_y = abs(first.center[1] - frame_center_y)
+        first_distance = (first_dist_x ** 2 + first_dist_y ** 2) ** 0.5
+        
+        last_dist_x = abs(last.center[0] - frame_center_x)
+        last_dist_y = abs(last.center[1] - frame_center_y)
+        last_distance = (last_dist_x ** 2 + last_dist_y ** 2) ** 0.5
+        
+        # If distance is decreasing, object is moving toward center (approaching)
+        # Require at least 10 pixels of movement toward center to avoid noise
+        distance_change = first_distance - last_distance
+        return distance_change > 10.0  # Moving at least 10 pixels closer to center
+    
+    @staticmethod
     def calculate_distance_estimate(box: Tuple[int, int, int, int], reference_area: Optional[int] = None) -> float:
         """
         Estimate distance to object based on bounding box area.

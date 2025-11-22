@@ -19,8 +19,8 @@ python-multipart==0.0.20
 websockets==15.0.1
 
 # Text-to-Speech
-pyttsx3==2.99  
-sentencepiece==0.2.1
+pyttsx3==2.99  # Primary TTS (works on all Python versions)
+sentencepiece==0.2.1  
 sounddevice==0.4.6  
 
 # Utilities
@@ -36,7 +36,7 @@ seaborn==0.13.2
 # Development & Notebooks
 jupyter==1.1.1   
 ipykernel==7.1.0
-notebook==7.5.0
+notebook==7.5.0  
 pytest==8.3.3  # Testing framework  
 
 # Optional: For dataset handling

@@ -7,7 +7,7 @@ from ultralytics import YOLO
 import logging
 
 from src.utils.data_structures import DetectionPoint
-from src.config import YOLO_MODEL_PATH
+from src.config import YOLO_MODEL_PATH, YOLO_CONFIDENCE_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +63,13 @@ class YOLOTracker:
             timestamp = time.time()
         
         try:
-            # Run tracking
-            results = self.model.track(frame, persist=True, verbose=False)
+            # Run tracking with confidence threshold
+            results = self.model.track(
+                frame, 
+                persist=True, 
+                verbose=False, 
+                conf=YOLO_CONFIDENCE_THRESHOLD
+            )
             
             detections = []
             annotated_frame = None
@@ -143,7 +148,8 @@ class YOLOTracker:
             List of DetectionPoint objects (track_id = -1)
         """
         try:
-            results = self.model(frame, verbose=False)
+            # Run detection with confidence threshold
+            results = self.model(frame, verbose=False, conf=YOLO_CONFIDENCE_THRESHOLD)
             detections = []
             
             if results and len(results) > 0:

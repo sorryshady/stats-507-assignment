@@ -8,6 +8,7 @@
    pip install -r requirements.txt
    ```
 
+
 2. **Verify Ollama setup:**
 
    ```bash
@@ -138,7 +139,8 @@ python tests/test_safety.py
 
 - Check system audio permissions
 - On macOS, may need to grant microphone/audio permissions
-- TTS may require system TTS engine setup
+- System uses pyttsx3, falling back to macOS `say` command if needed
+- **Speech Queue**: All speech is now queued - no more skipped narrations!
 
 ### Performance issues
 

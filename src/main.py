@@ -361,7 +361,7 @@ class DualLoopSystem:
                             # Only rate limit if we just spoke (avoid immediate repeat)
                             if (
                                 current_time - self.last_warning_time
-                            ) >= 1.0:  # Reduced to 1 second
+                            ) >= 3.0:  # Increased to 3 seconds to reduce warning spam
                                 logger.info(
                                     f"Speaking hazard warning after beep: {warning_msg}"
                                 )
@@ -418,6 +418,18 @@ class DualLoopSystem:
                 )
                 logger.debug(f"Movements: {object_movements}")
 
+                # Debug inputs to LLM in test mode
+                if self.test_mode:
+                    logger.info("--- INPUTS TO LLM ---")
+                    logger.info(f"Scene Description: {scene_description}")
+                    if object_movements:
+                        logger.info("Detected Objects & Movements:")
+                        for mv in object_movements:
+                            logger.info(f"  - {mv}")
+                    else:
+                        logger.info("Detected Objects: None")
+                    logger.info("---------------------")
+
                 # Step 3: Generate narration
                 narration = self.narrator.generate_narration_from_components(
                     scene_description, object_movements
@@ -470,6 +482,10 @@ class DualLoopSystem:
         """Stop the dual-loop system."""
         logger.info("Stopping dual-loop system...")
         self.running = False
+
+        # Stop audio handler (stops worker thread and clears queue)
+        if self.audio:
+            self.audio.stop()
 
         # Close visualization window
         if self.show_visualization:
