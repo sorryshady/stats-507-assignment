@@ -165,10 +165,13 @@ class SafetyMonitor:
         high_priority = [h for h in hazards if h.priority == "high"]
         if high_priority:
             hazard = high_priority[0]
-            return f"STOP! {hazard.class_name} approaching"
+            # Use neutral language - can't tell if user or object is moving
+            class_name_formatted = hazard.class_name.capitalize()
+            return f"STOP! {class_name_formatted} in front of you"
         
         medium_priority = [h for h in hazards if h.priority == "medium"]
         if medium_priority:
             hazard = medium_priority[0]
-            return f"Warning: {hazard.class_name} detected"
+            class_name_formatted = hazard.class_name.capitalize()
+            return f"Warning: {class_name_formatted} detected"
 

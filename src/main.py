@@ -104,6 +104,8 @@ class DualLoopSystem:
         )
         self.last_warned_hazard_id = None  # Track which hazard we last warned about
         self.hazard_warning_cooldown = 3.0  # Don't warn about same hazard for 3 seconds
+        from src.config import GLOBAL_WARNING_COOLDOWN
+        self.global_warning_cooldown = GLOBAL_WARNING_COOLDOWN  # Global cooldown for ALL warnings (5 seconds)
 
         # Visualization
         self.show_visualization = SHOW_TRACKING_VISUALIZATION
@@ -258,6 +260,17 @@ class DualLoopSystem:
 
                 # Trigger warning if needed (with rate limiting)
                 if self.safety_monitor.should_warn(hazards):
+                    current_time = time.time()
+                    
+                    # GLOBAL COOLDOWN: Don't warn if ANY warning was fired recently (5 seconds)
+                    time_since_last_warning = current_time - self.last_warning_time
+                    if time_since_last_warning < self.global_warning_cooldown:
+                        logger.debug(
+                            f"Skipping warning - global cooldown active "
+                            f"(last warning {time_since_last_warning:.2f}s ago, need {self.global_warning_cooldown}s)"
+                        )
+                        continue  # Skip this frame's warning entirely
+                    
                     warning_msg = self.safety_monitor.get_warning_message(hazards)
                     high_priority = any(h.priority == "high" for h in hazards)
 
@@ -273,16 +286,14 @@ class DualLoopSystem:
                         if hazards:
                             current_hazard_id = hazards[0].object_id
 
-                    # Check if this is the same hazard we just warned about (before any audio/logging)
-                    current_time = time.time()
+                    # Check if this is the same hazard we just warned about (additional check)
                     is_same_hazard = (
                         current_hazard_id is not None
                         and current_hazard_id == self.last_warned_hazard_id
                     )
 
-                    # If same hazard and within cooldown, skip entire warning (don't interrupt speech)
+                    # If same hazard and within cooldown, skip (redundant check, but keep for logging)
                     if is_same_hazard:
-                        time_since_last_warning = current_time - self.last_warning_time
                         if time_since_last_warning < self.hazard_warning_cooldown:
                             logger.debug(
                                 f"Skipping warning - same hazard still active "
@@ -358,18 +369,15 @@ class DualLoopSystem:
                                     )
 
                             # Then speak warning (will wait for beep to finish)
-                            # Only rate limit if we just spoke (avoid immediate repeat)
-                            if (
-                                current_time - self.last_warning_time
-                            ) >= 3.0:  # Increased to 3 seconds to reduce warning spam
-                                logger.info(
-                                    f"Speaking hazard warning after beep: {warning_msg}"
-                                )
-                                # Speech will wait for beep to finish automatically
-                                self.audio.speak_text(warning_msg, priority=True)
-                                self.last_warning_time = current_time
-                                # Remember which hazard we warned about
-                                self.last_warned_hazard_id = current_hazard_id
+                            # Global cooldown already checked above, so we can speak here
+                            logger.info(
+                                f"Speaking hazard warning after beep: {warning_msg}"
+                            )
+                            # Speech will wait for beep to finish automatically
+                            self.audio.speak_text(warning_msg, priority=True)
+                            self.last_warning_time = current_time  # Update global warning time
+                            # Remember which hazard we warned about
+                            self.last_warned_hazard_id = current_hazard_id
 
                 # Cleanup stale objects periodically
                 if frame_id % 30 == 0:

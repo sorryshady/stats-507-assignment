@@ -5,10 +5,12 @@ HISTORY_BUFFER_SIZE = 90  # 90 frames at 30 FPS = 3 seconds
 
 # Safety Zone Configuration
 CENTER_ZONE_THRESHOLD = 0.4  # 40% center of frame
-EXPANSION_THRESHOLD = 0.25  # 25% growth triggers warning (increased to reduce false positives from minor movements)
+EXPANSION_THRESHOLD = 0.4  # 40% growth triggers warning (increased to reduce false positives from hand movements)
+MIN_APPROACH_DISTANCE = 15.0  # Minimum pixels object center must move toward frame center to be considered "approaching"
 EXPANSION_TIME_WINDOW = (
-    1.0  # 1.0 seconds for expansion check (increased to require sustained growth)
+    1.5  # 1.5 seconds for expansion check (increased to require sustained growth)
 )
+GLOBAL_WARNING_COOLDOWN = 5.0  # Minimum seconds between ANY warnings (prevents spam)
 
 # Hazard Classes (COCO class names)
 HAZARD_CLASSES = ["car", "truck", "bus", "bicycle", "motorcycle", "person"]

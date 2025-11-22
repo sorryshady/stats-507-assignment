@@ -155,9 +155,10 @@ class PhysicsEngine:
         last_distance = (last_dist_x ** 2 + last_dist_y ** 2) ** 0.5
         
         # If distance is decreasing, object is moving toward center (approaching)
-        # Require at least 10 pixels of movement toward center to avoid noise
+        # Require significant movement toward center to avoid noise from hand movements
+        from src.config import MIN_APPROACH_DISTANCE
         distance_change = first_distance - last_distance
-        return distance_change > 10.0  # Moving at least 10 pixels closer to center
+        return distance_change > MIN_APPROACH_DISTANCE  # Moving at least MIN_APPROACH_DISTANCE pixels closer to center
     
     @staticmethod
     def calculate_distance_estimate(box: Tuple[int, int, int, int], reference_area: Optional[int] = None) -> float:
