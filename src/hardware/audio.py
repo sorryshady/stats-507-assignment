@@ -87,6 +87,7 @@ class AudioHandler:
         """
         Play a beep sound for safety warnings.
         Beeps are prioritized - they play immediately and TTS will wait.
+        Optimized to avoid frame stutter by doing all work in background thread.
         
         Args:
             frequency: Frequency in Hz
@@ -105,21 +106,26 @@ class AudioHandler:
         self.last_beep_time = current_time
         
         def _beep():
+            """Generate and play beep in background thread to avoid blocking."""
             self.beep_playing = True
             try:
                 if self.sounddevice_available:
                     import sounddevice as sd
                     import numpy as np
-                    # Generate sine wave
+                    # Generate sine wave in thread (moved here to avoid blocking main thread)
                     sample_rate = 44100
-                    t = np.linspace(0, duration, int(sample_rate * duration))
-                    wave = np.sin(2 * np.pi * frequency * t)
-                    # Play sound with error handling
+                    num_samples = int(sample_rate * duration)
+                    # Use more efficient array generation with float32
+                    t = np.linspace(0, duration, num_samples, dtype=np.float32)
+                    wave = np.sin(2 * np.pi * frequency * t).astype(np.float32)
+                    
+                    # Play sound without holding lock during wait (lock only for play call)
                     try:
-                        # Use audio lock to prevent conflicts with TTS
+                        # Only lock during the play() call, not during wait()
                         with self.audio_lock:
                             sd.play(wave, samplerate=sample_rate)
-                            sd.wait()
+                        # Wait outside lock to avoid blocking TTS unnecessarily
+                        sd.wait()
                     except Exception as e:
                         logger.debug(f"sounddevice play failed: {e}")
                         self.sounddevice_available = False
@@ -137,7 +143,7 @@ class AudioHandler:
             finally:
                 self.beep_playing = False
         
-        # Play in separate thread to avoid blocking
+        # Play in separate thread to avoid blocking main/reflex loop
         thread = threading.Thread(target=_beep, daemon=True)
         thread.start()
     

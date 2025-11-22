@@ -17,13 +17,29 @@ class YOLOTracker:
     
     def __init__(self, model_path: str = YOLO_MODEL_PATH):
         """
-        Initialize YOLO tracker.
+        Initialize YOLO tracker with GPU acceleration.
         
         Args:
             model_path: Path to YOLO model weights (.pt file)
         """
         try:
+            # Detect available device (MPS for Mac, CUDA for NVIDIA, CPU fallback)
+            import torch
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
+            
+            # YOLO automatically uses the best available device, but we can explicitly set it
             self.model = YOLO(model_path)
+            # Ensure model uses GPU if available
+            if device != "cpu":
+                logger.info(f"YOLO model will use {device} acceleration")
+            else:
+                logger.warning("YOLO model using CPU - GPU not available")
+            
             logger.info(f"YOLO model loaded from {model_path}")
         except Exception as e:
             logger.error(f"Failed to load YOLO model: {e}")

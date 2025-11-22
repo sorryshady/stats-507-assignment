@@ -34,8 +34,17 @@ class SceneComposer:
             self.processor = BlipProcessor.from_pretrained(self.model_name)
             self.model = BlipForConditionalGeneration.from_pretrained(self.model_name)
             
-            # Use GPU if available (Metal on M4)
-            self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+            # Use GPU if available (Metal/MPS on Mac, CUDA on NVIDIA)
+            if torch.cuda.is_available():
+                self.device = "cuda"
+                logger.info("Using CUDA GPU acceleration")
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                self.device = "mps"
+                logger.info("Using Apple Metal (MPS) GPU acceleration")
+            else:
+                self.device = "cpu"
+                logger.warning("GPU not available, using CPU (slower)")
+            
             self.model.to(self.device)
             self.model.eval()
             

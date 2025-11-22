@@ -44,6 +44,7 @@ class DualLoopSystem:
         test_mode: bool = False,
         test_video_path: Optional[str] = None,
         use_camera: bool = False,
+        camera_id: Optional[int] = None,
     ):
         """
         Initialize dual-loop system.
@@ -57,8 +58,14 @@ class DualLoopSystem:
         self.running = False
 
         # Hardware
+        from src.config import CAMERA_DEVICE_ID
+
+        device_id = camera_id if camera_id is not None else CAMERA_DEVICE_ID
         self.camera = CameraHandler(
-            test_mode=test_mode, test_video_path=test_video_path, use_camera=use_camera
+            test_mode=test_mode,
+            test_video_path=test_video_path,
+            use_camera=use_camera,
+            device_id=device_id,
         )
         self.audio = AudioHandler()
 
@@ -506,13 +513,28 @@ def main():
         action="store_true",
         help="Use camera input (works with --test for test mode + camera)",
     )
+    parser.add_argument(
+        "--camera-id",
+        type=int,
+        default=None,
+        help="Camera device ID (overrides CAMERA_DEVICE_ID from config). "
+        "Run 'python list_cameras.py' to find available cameras.",
+    )
     args = parser.parse_args()
 
     # If --test-video is provided, use video. Otherwise, use camera if --use-camera or not in test mode
     use_camera = args.use_camera or (not args.test and args.test_video is None)
 
+    # Use camera ID from command line if provided, otherwise use config default
+    from src.config import CAMERA_DEVICE_ID
+
+    camera_id = args.camera_id if args.camera_id is not None else CAMERA_DEVICE_ID
+
     system = DualLoopSystem(
-        test_mode=args.test, test_video_path=args.test_video, use_camera=use_camera
+        test_mode=args.test,
+        test_video_path=args.test_video,
+        use_camera=use_camera,
+        camera_id=camera_id,
     )
     system.start()
 

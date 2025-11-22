@@ -9,7 +9,7 @@ EXPANSION_THRESHOLD = 0.1  # 10% growth triggers warning
 EXPANSION_TIME_WINDOW = 0.5  # 0.5 seconds for expansion check
 
 # Hazard Classes (COCO class names)
-HAZARD_CLASSES = ['car', 'truck', 'bus', 'bicycle', 'motorcycle', 'person']
+HAZARD_CLASSES = ["car", "truck", "bus", "bicycle", "motorcycle", "person"]
 
 # Camera Configuration
 CAMERA_DEVICE_ID = 0  # Default webcam, adjust for iPhone
@@ -24,6 +24,8 @@ BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-base"
 # Ollama Configuration
 OLLAMA_API_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"
+# Note: Ollama automatically uses Metal GPU acceleration on Mac when available
+# Ensure Ollama is running with GPU support: ollama serve
 
 # Audio Configuration
 BEEP_FREQUENCY = 800  # Hz
@@ -41,8 +43,9 @@ LOG_LEVEL = "INFO"
 
 # Test Mode Settings
 TEST_MODE_QUIET_HAZARDS = True  # Reduce hazard logging in test mode
-TEST_MODE_DISABLE_AUDIO = False  # Disable audio warnings in test mode (but allow narration audio)
+TEST_MODE_DISABLE_AUDIO = (
+    False  # Disable audio warnings in test mode (but allow narration audio)
+)
 
 # Visualization Settings
 SHOW_TRACKING_VISUALIZATION = True  # Show live tracking feed with bounding boxes
-

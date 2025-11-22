@@ -72,7 +72,9 @@ TASK: Summarize this in one natural sentence, prioritizing safety. Be direct and
                 "options": {
                     "temperature": 0.3,  # Lower temperature for more focused, less creative output
                     "top_p": 0.9,
-                    "num_predict": 100  # Limit response length
+                    "num_predict": 100,  # Limit response length
+                    # Note: Ollama automatically uses Metal GPU on Mac when available
+                    # GPU acceleration is handled by Ollama server, not via API
                 }
             }
             

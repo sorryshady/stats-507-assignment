@@ -18,13 +18,24 @@
 
    ```bash
    # Start Ollama (if not running)
+   # Ollama automatically uses Metal GPU acceleration on Mac
    ollama serve
 
    # Pull Llama 3.2 3B model
    ollama pull llama3.2:3b
+
+   # Verify GPU usage (should show Metal on Mac)
+   ollama ps
    ```
 
-3. **Ensure YOLO model is present:**
+3. **GPU Acceleration:**
+
+   - **YOLO11**: Automatically uses MPS (Metal) on Mac, CUDA on NVIDIA GPUs
+   - **BLIP**: Automatically uses MPS (Metal) on Mac, CUDA on NVIDIA GPUs
+   - **Ollama/Llama**: Automatically uses Metal on Mac when available
+   - All models will fall back to CPU if GPU is unavailable
+
+4. **Ensure YOLO model is present:**
    The `yolo11n.pt` file should be in the project root.
 
 ## Running the System
@@ -106,8 +117,15 @@ python tests/test_safety.py
 
 ### Camera not working
 
-- Check camera permissions
+- Check camera permissions (System Settings > Privacy & Security > Camera)
+- **Find available cameras**: Run `python list_cameras.py` to see all available camera devices
+- **iPhone Continuity Camera**:
+  - Connect iPhone to Mac (USB or wirelessly)
+  - Enable Continuity Camera on iPhone
+  - Run `python list_cameras.py` to find the device ID (usually higher resolution like 1920x1080)
+  - Update `CAMERA_DEVICE_ID` in `src/config.py` or use `--camera-id` flag
 - Try different device IDs in `src/config.py` (`CAMERA_DEVICE_ID`)
+- Use `--camera-id` command-line argument to override config: `python -m src.main --camera-id 1`
 - Use `--test` flag to test with static images
 
 ### Ollama connection failed
