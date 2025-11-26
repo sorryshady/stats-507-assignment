@@ -145,24 +145,94 @@ TASK: Summarize this in one natural sentence, prioritizing safety.
 
 ---
 
-## 6. 🗓️ Implementation Roadmap
+## 6. 📁 Project Structure
 
-### Phase 1: The Hardware Handshake (Current)
+```
+final/
+├── README.md                 # This file
+├── requirements.txt          # Python dependencies
+├── run.py                    # CLI entry point
+├── yolo11n.pt               # YOLO model weights
+│
+├── src/                      # Core ML codebase
+│   ├── main.py              # Dual-loop system orchestrator
+│   ├── config.py            # Configuration constants
+│   ├── hardware/            # Camera & audio handlers
+│   ├── reflex_loop/         # Safety monitoring (30 FPS)
+│   ├── cognitive_loop/      # Scene narration (on-demand)
+│   └── utils/               # Data structures & threading
+│
+├── docs/                     # Documentation
+│   ├── README.md            # Documentation index
+│   ├── USAGE.md             # Usage guide
+│   ├── CONTROL_FLOW.md      # System architecture
+│   ├── logging.md           # Logging documentation
+│   ├── IMPLEMENTATION_TIMELINE.md  # Web app timeline
+│   ├── WEB_APP_PLAN.md      # Web app architecture
+│   └── project_guidelines/   # Course requirements
+│
+├── scripts/                  # Utility scripts
+│   ├── list_cameras.py      # List available cameras
+│   ├── verify_ollama.py     # Check Ollama setup
+│   └── verify_tts.py        # Test audio system
+│
+├── tests/                    # Unit tests
+├── test_images/             # Test image dataset
+└── venv/                    # Virtual environment (gitignored)
+```
 
-- [ ] **Input:** Secure 0.5x video feed from iPhone 17 Pro (via Desk View hack or Camo).
-- [ ] **Environment:** Verify Ollama + Llama 3.2 is running on M4 Metal.
+## 7. 🚀 Quick Start
 
-### Phase 2: The "Memory" Core
+### Installation
 
-- [ ] **History Buffer:** Implement `deque(maxlen=90)` to store tracking data.
-- [ ] **Physics Engine:** Write the logic to calculate `delta_x` and `area_growth`.
+```bash
+# Clone repository
+git clone <repository-url>
+cd final
 
-### Phase 3: The Brain
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-- [ ] **Prompt Engineering:** Tune the Llama 3.2 system prompt for brevity.
-- [ ] **Integration:** Connect `SceneComposer` to `LLMNarrator`.
+# Install dependencies
+pip install -r requirements.txt
 
-### Phase 4: The Polish
+# Verify Ollama setup
+python scripts/verify_ollama.py
+```
 
-- [ ] **Threading:** Ensure Llama inference does not block the Safety Loop.
-- [ ] **TTS:** Integrate a low-latency speech engine.
+### Running the CLI Application
+
+```bash
+# With camera (default)
+python run.py
+
+# Or use module syntax
+python -m src.main
+
+# Test mode with camera
+python -m src.main --test --use-camera
+
+# Test mode with video file
+python -m src.main --test --test-video path/to/video.mp4
+```
+
+See [docs/USAGE.md](docs/USAGE.md) for detailed usage instructions.
+
+## 8. 📚 Documentation
+
+- **[Usage Guide](docs/USAGE.md)** - How to run the application
+- **[System Architecture](docs/CONTROL_FLOW.md)** - Detailed control flow
+- **[Logging System](docs/logging.md)** - Logging documentation
+- **[Implementation Timeline](docs/IMPLEMENTATION_TIMELINE.md)** - Web app development plan
+- **[Web App Plan](docs/WEB_APP_PLAN.md)** - Full-stack architecture
+
+## 9. 🗓️ Current Status
+
+**Phase:** Web Application Development (Nov 25 - Dec 3, 2025)
+
+- ✅ Core ML pipeline (YOLO, BLIP, Llama 3.2)
+- ✅ CLI application with dual-loop system
+- 🚧 Backend API (FastAPI) - In Progress
+- ⏳ Frontend (Next.js) - Planned
+- ⏳ Jupyter notebook demo - Planned

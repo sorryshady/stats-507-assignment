@@ -1,0 +1,30 @@
+"""
+FastAPI Application Entry Point
+
+This is a TEMPLATE to help you get started.
+Read docs/DAY1_BACKEND_GUIDE.md for explanations.
+
+Replace this file with your implementation.
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+# TODO: Create FastAPI app instance
+# app = FastAPI(...)
+
+# TODO: Add CORS middleware
+# app.add_middleware(...)
+
+# TODO: Add root endpoint
+# @app.get("/")
+# def root():
+#     return {"status": "running"}
+
+# TODO: Include routers
+# from app.api.routes import status, camera
+# app.include_router(status.router, prefix="/api")
+# app.include_router(camera.router, prefix="/api")
+
+# When ready, run with: uvicorn app.main:app --reload --port 8000
+
