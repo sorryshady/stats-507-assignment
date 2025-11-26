@@ -54,6 +54,22 @@ Visit `http://localhost:8000/docs` for interactive API docs!
 python backend/test_websocket.py
 ```
 
+**Narration Endpoint Test:**
+```bash
+python backend/test_narration.py
+```
+
+Or with curl:
+```bash
+# First encode an image to base64
+base64_image=$(base64 -i test_images/test_image_0.jpg)
+
+# Send request
+curl -X POST http://localhost:8000/api/narration \
+  -H "Content-Type: application/json" \
+  -d "{\"frame\": \"$base64_image\"}"
+```
+
 ## 📡 API Endpoints
 
 ### REST Endpoints
@@ -61,6 +77,7 @@ python backend/test_websocket.py
 - `GET /` - Root endpoint (API info)
 - `GET /api/status` - System status (models, GPU, Ollama)
 - `GET /api/health` - Health check
+- `POST /api/narration` - Generate narration for a frame (cognitive loop)
 
 ### WebSocket Endpoint
 
@@ -149,13 +166,21 @@ cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-## 📝 Next Steps (Day 2)
+## ✅ Day 2 Complete!
 
-- Add narration endpoint (`POST /api/narration`)
-- Improve error handling
-- Add request validation
+**Implemented:**
+- ✅ Narration REST endpoint (`POST /api/narration`)
+- ✅ Comprehensive error handling middleware
+- ✅ Request validation with Pydantic
+- ✅ Processing time measurement
+- ✅ Test scripts for all endpoints
+
+## 📝 Next Steps (Day 3)
+
+- Write API tests
 - Performance optimization
-- Add logging middleware
+- Add request rate limiting (optional)
+- Add logging middleware (optional)
 
 ## 📚 Documentation
 

@@ -1,10 +1,17 @@
 """FastAPI application entry point."""
 
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api.routes import status, camera
+from app.api.routes import status, camera, narration
+from app.middleware.error_handler import (
+    validation_exception_handler,
+    http_exception_handler,
+    general_exception_handler,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -28,9 +35,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add exception handlers
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
+
 # Include routers
 app.include_router(status.router, prefix="/api", tags=["status"])
 app.include_router(camera.router, prefix="/api", tags=["camera"])
+app.include_router(narration.router, prefix="/api", tags=["narration"])
 
 
 @app.get("/")
@@ -44,6 +57,7 @@ def root():
         "endpoints": {
             "status": "/api/status",
             "health": "/api/health",
+            "narration": "/api/narration",
             "websocket": "/api/ws/camera",
         },
     }
