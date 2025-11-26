@@ -17,6 +17,14 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Debug: Log when detectionCount changes
+  useEffect(() => {
+    console.log("StatusPanel: detectionCount prop changed", {
+      detectionCount,
+      type: typeof detectionCount,
+    });
+  }, [detectionCount]);
+
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -114,7 +122,7 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
             <div className="pt-2 border-t">
               <div className="text-sm">
                 <span className="font-medium">Active Detections: </span>
-                <span className="text-muted-foreground">{detectionCount}</span>
+                <span className="font-semibold text-primary">{detectionCount}</span>
               </div>
             </div>
           </div>

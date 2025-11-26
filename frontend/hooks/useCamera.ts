@@ -65,15 +65,26 @@ export function useCamera() {
   }, []);
 
   const stopCamera = useCallback(() => {
+    console.log("Stopping camera...");
+    
+    // Stop all tracks in the stream
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+        console.log("Stopped track:", track.kind, track.label);
+      });
       streamRef.current = null;
     }
-    setIsActive(false);
     
+    // Clear video element
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+      videoRef.current.pause();
+      console.log("Video element cleared");
     }
+    
+    setIsActive(false);
+    setHasPermission(null);
   }, []);
 
   const captureFrame = useCallback((): string | null => {
@@ -118,7 +129,7 @@ export function useCamera() {
         const video = videoRef.current;
         const stream = streamRef.current;
         
-        if (video && stream) {
+        if (video && stream && isActive) {
           console.log("✅ Video element and stream ready, attaching...");
           
           // Only attach if not already attached
@@ -155,6 +166,16 @@ export function useCamera() {
       };
       
       checkAndAttach();
+    } else if (!isActive && videoRef.current) {
+      // When camera is stopped, ensure video is cleared
+      const video = videoRef.current;
+      if (video.srcObject) {
+        const stream = video.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        video.pause();
+        console.log("✅ Video element cleared on stop");
+      }
     }
   }, [isActive]); // Re-run when isActive changes
 

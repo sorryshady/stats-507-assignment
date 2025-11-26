@@ -29,7 +29,7 @@ class TrajectoryAnalyzer:
         """
         history = tracked_object.get_trajectory()
         
-        if len(history) < 2:
+        if len(history) < 5:  # Require at least 5 frames for stable analysis
             return "Stationary"
         
         # Calculate velocity
@@ -43,11 +43,16 @@ class TrajectoryAnalyzer:
             # Require more significant movement to classify as non-stationary
             movement_type = self._classify_movement(
                 delta_x, delta_y, area_growth, 
-                velocity_threshold=5.0,  # Increased from 2.0
-                area_threshold=10.0  # Increased from 5.0
+                velocity_threshold=5.0,
+                area_threshold=15.0  # Increased to avoid false positives
             )
         else:
-            movement_type = self._classify_movement(delta_x, delta_y, area_growth)
+            # Defaults: velocity > 2.0, area > 10.0 (increased from 5.0)
+            movement_type = self._classify_movement(
+                delta_x, delta_y, area_growth,
+                velocity_threshold=2.0,
+                area_threshold=10.0
+            )
         
         # Format description
         description = self._format_description(
@@ -57,7 +62,7 @@ class TrajectoryAnalyzer:
         return description
     
     def _classify_movement(self, delta_x: float, delta_y: float, area_growth: float,
-                          velocity_threshold: float = 2.0, area_threshold: float = 5.0) -> str:
+                          velocity_threshold: float = 2.0, area_threshold: float = 10.0) -> str:
         """
         Classify movement type.
         
@@ -108,7 +113,7 @@ class TrajectoryAnalyzer:
             return f"{class_name}: Stationary"
         
         elif movement_type == "Approaching":
-            if abs(area_growth) > 20:
+            if abs(area_growth) > 40:  # Require 40% growth for "rapid"
                 return f"{class_name}: Approaching rapidly"
             else:
                 return f"{class_name}: Approaching"

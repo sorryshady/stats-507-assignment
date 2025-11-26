@@ -42,14 +42,16 @@ class LLMNarrator:
         else:
             entities_text = "- No objects detected."
         
-        prompt = f"""SYSTEM: You are a helpful assistant for a blind user. Be concise and direct. Only describe what you see. Do not ask questions or provide follow-up suggestions.
+        prompt = f"""SYSTEM: You are a helpful assistant for a blind user. Be concise and direct. Only describe what is certainly present. Do not ask questions.
 
 USER:
 Context: "{scene_description}"
-Entities:
+Entities (detected movement):
 {entities_text}
 
-TASK: Summarize this in one natural sentence, prioritizing safety. Be direct and factual. Do not ask follow-up questions."""
+TASK: Synthesize the context and entities into one natural sentence.
+IMPORTANT: The entities likely correspond to the subjects in the context (e.g., a "person" entity is likely the same as "a man" or "a woman" in the context). Do not treat them as separate people unless clearly distinct.
+Prioritize safety information."""
         
         return prompt
     

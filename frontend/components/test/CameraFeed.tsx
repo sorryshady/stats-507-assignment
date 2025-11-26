@@ -4,15 +4,28 @@ import { useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCamera } from "@/hooks/useCamera";
-import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface CameraFeedProps {
   onFrameCapture?: (frameBase64: string) => void;
   onVideoDimensionsChange?: (width: number, height: number) => void;
   videoRef?: React.RefObject<HTMLVideoElement>;
+  isWebSocketConnected: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  onSendFrame: (frame: string) => void;
+  mode?: "default" | "compact";
 }
 
-export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: externalVideoRef }: CameraFeedProps) {
+export function CameraFeed({ 
+  onFrameCapture, 
+  onVideoDimensionsChange, 
+  videoRef: externalVideoRef,
+  isWebSocketConnected,
+  onConnect,
+  onDisconnect,
+  onSendFrame,
+  mode = "default"
+}: CameraFeedProps) {
   const { videoRef: internalVideoRef, isActive, hasPermission, error, startCamera, stopCamera, captureFrame } = useCamera();
   
   // Callback ref to set both internal and external refs
@@ -24,24 +37,40 @@ export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: 
       (externalVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = node;
     }
   };
-  const { isConnected, connect, disconnect, sendFrame } = useWebSocket();
+  
   const frameIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Handle frame capture
   useEffect(() => {
-    if (isActive && isConnected) {
+    // Clear existing interval first
+    if (frameIntervalRef.current) {
+      clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = null;
+    }
+
+    if (isActive && isWebSocketConnected) {
       // Wait a bit for video to be ready before starting frame capture
       const startFrameCapture = () => {
+        if (!isActive || !isWebSocketConnected) return;
+
         if (internalVideoRef.current && internalVideoRef.current.readyState >= 2) {
           // Capture and send frames at ~10 FPS (reduced for performance)
           frameIntervalRef.current = setInterval(() => {
+            // Double check active state inside interval
+            if (!isActive || !isWebSocketConnected) {
+              if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+              return;
+            }
+
             const frame = captureFrame();
             if (frame) {
-              sendFrame(frame);
+              onSendFrame(frame);
               onFrameCapture?.(frame);
             } else {
               // Only log if video exists but isn't ready
               if (internalVideoRef.current && internalVideoRef.current.readyState < 2) {
-                console.debug("Frame capture skipped. Video readyState:", internalVideoRef.current.readyState);
+                // Reduce log noise by checking if we recently logged
+                // console.debug("Frame capture skipped. Video readyState:", internalVideoRef.current.readyState);
               }
             }
           }, 100); // ~10 FPS - adjust as needed
@@ -57,24 +86,26 @@ export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: 
     return () => {
       if (frameIntervalRef.current) {
         clearInterval(frameIntervalRef.current);
+        frameIntervalRef.current = null;
       }
     };
-  }, [isActive, isConnected, captureFrame, sendFrame, onFrameCapture, internalVideoRef]);
+  }, [isActive, isWebSocketConnected, captureFrame, onSendFrame, onFrameCapture, internalVideoRef]);
 
+  // Handle WebSocket connection based on camera state
   useEffect(() => {
-    if (isActive) {
+    if (isActive && !isWebSocketConnected) {
       console.log("Camera active, connecting WebSocket...");
-      connect();
-    } else {
+      onConnect();
+    } else if (!isActive && isWebSocketConnected) {
       console.log("Camera inactive, disconnecting WebSocket...");
-      disconnect();
+      onDisconnect();
     }
-  }, [isActive, connect, disconnect]);
+  }, [isActive, isWebSocketConnected, onConnect, onDisconnect]);
 
   return (
     <Card className="relative overflow-hidden">
-      <div className="relative aspect-video bg-black">
-        {!hasPermission && hasPermission !== null && (
+      <div className={`relative bg-black ${mode === "compact" ? "h-0" : "aspect-video"}`}>
+        {!hasPermission && hasPermission !== null && mode !== "compact" && (
           <div className="absolute inset-0 flex items-center justify-center text-white">
             <div className="text-center space-y-4">
               <p className="text-lg">Camera permission denied</p>
@@ -83,7 +114,7 @@ export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: 
           </div>
         )}
         
-        {hasPermission === null && (
+        {hasPermission === null && mode !== "compact" && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Skeleton className="w-full h-full" />
           </div>
@@ -91,10 +122,10 @@ export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: 
 
         <video
           ref={setVideoRef}
-          autoPlay
+          autoPlay={isActive}
           playsInline
           muted
-          className={`w-full h-full object-cover ${!isActive ? "hidden" : ""}`}
+          className={`w-full h-full object-cover ${(!isActive || mode === "compact") ? "hidden" : ""}`}
           style={{ backgroundColor: "black" }}
           onLoadedMetadata={(e) => {
               const video = e.currentTarget;
@@ -132,20 +163,29 @@ export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: 
             }}
           />
 
-        {isActive && (
+        {isActive && mode !== "compact" && (
           <div className="absolute top-4 left-4 flex gap-2">
             <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              isConnected ? "bg-green-500 text-white" : "bg-red-500 text-white"
+              isWebSocketConnected ? "bg-green-500 text-white" : "bg-red-500 text-white"
             }`}>
-              {isConnected ? "Connected" : "Disconnected"}
+              {isWebSocketConnected ? "Connected" : "Disconnected"}
             </div>
           </div>
         )}
       </div>
 
       <div className="p-4 flex justify-between items-center">
-        <div className="text-sm text-muted-foreground">
-          {isActive ? "Camera active" : "Camera inactive"}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            {isActive ? "Camera active" : "Camera inactive"}
+          </div>
+          {isActive && (
+            <div className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+              isWebSocketConnected ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+            }`}>
+              {isWebSocketConnected ? "WS Connected" : "WS Disconnected"}
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           {!isActive ? (
@@ -168,4 +208,3 @@ export function CameraFeed({ onFrameCapture, onVideoDimensionsChange, videoRef: 
     </Card>
   );
 }
-

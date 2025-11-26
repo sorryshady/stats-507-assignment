@@ -3,11 +3,15 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import type { DetectionResponse } from "@/lib/types";
 
-export function DebugPanel() {
-  const { isConnected, detections, error } = useWebSocket();
-  
+interface DebugPanelProps {
+  isConnected?: boolean;
+  detections?: DetectionResponse | null;
+  error?: string | null;
+}
+
+export function DebugPanel({ isConnected = false, detections = null, error = null }: DebugPanelProps) {
   // Debug: Log when detections change
   useEffect(() => {
     if (detections) {

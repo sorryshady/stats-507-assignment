@@ -11,6 +11,7 @@ export function useWebSocket() {
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFrameIdRef = useRef<number>(-1);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -35,18 +36,38 @@ export function useWebSocket() {
           // Handle different message types
           if (data.type === "frame_result") {
             // Convert backend response format to frontend format
+            // Create a new object to ensure React detects the change
             const detectionResponse: DetectionResponse = {
-              detections: data.detections || [],
-              hazards: data.hazards || [],
+              detections: Array.isArray(data.detections) ? [...data.detections] : [],
+              hazards: Array.isArray(data.hazards) ? [...data.hazards] : [],
               frame_id: data.frame_id || 0,
               timestamp: data.timestamp || Date.now() / 1000,
               annotated_frame: data.annotated_frame || undefined,
             };
-            setDetections(detectionResponse);
-            // Debug log (can be removed later)
-            if (detectionResponse.detections.length > 0) {
-              console.log(`Received ${detectionResponse.detections.length} detections`, detectionResponse.detections);
+            
+            // Always update state - React will batch rapid updates
+            // Use frame_id to track, but always create new object reference
+            const shouldUpdate = detectionResponse.frame_id !== lastFrameIdRef.current;
+            lastFrameIdRef.current = detectionResponse.frame_id;
+            
+            if (shouldUpdate) {
+              console.log("useWebSocket: Setting detections state", {
+                detectionsArray: detectionResponse.detections,
+                detectionsCount: detectionResponse.detections.length,
+                frameId: detectionResponse.frame_id,
+                hasAnnotatedFrame: !!detectionResponse.annotated_frame,
+                annotatedFrameLength: detectionResponse.annotated_frame?.length || 0,
+              });
             }
+            
+            // Always create a completely new object to ensure React detects the change
+            // Use timestamp to force React to see it as a new value
+            setDetections({
+              ...detectionResponse,
+              detections: [...detectionResponse.detections],
+              hazards: [...detectionResponse.hazards],
+              _updateTime: Date.now(), // Force React to see as new object
+            });
           } else if (data.type === "error") {
             console.error("Server error:", data.message);
             setError(data.message || "Server error");
@@ -77,12 +98,15 @@ export function useWebSocket() {
           wasClean: event.wasClean,
         });
         
-        // Auto-reconnect after 3 seconds if not a clean close
-        if (event.code !== 1000) {
+        // Auto-reconnect after 3 seconds if not a clean close (1000) or no status (1005)
+        // Only reconnect if it was an unexpected disconnect (not 1000 or 1005)
+        if (event.code !== 1000 && event.code !== 1005) {
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log("Attempting to reconnect WebSocket...");
             connect();
           }, 3000);
+        } else {
+          console.log("WebSocket closed normally, not reconnecting");
         }
       };
     } catch (err) {
@@ -94,12 +118,17 @@ export function useWebSocket() {
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
     if (wsRef.current) {
-      wsRef.current.close();
+      // Close with code 1000 (normal closure) to prevent auto-reconnect
+      wsRef.current.close(1000, "Client disconnect");
       wsRef.current = null;
     }
     setIsConnected(false);
+    // Clear detections and reset frame tracking when disconnecting
+    setDetections(null);
+    lastFrameIdRef.current = -1;
   }, []);
 
   const sendFrame = useCallback((frameBase64: string) => {

@@ -12,7 +12,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { Card } from "@/components/ui/card";
 
 export default function TestPage() {
-  const { detections, isConnected } = useWebSocket();
+  const { detections, isConnected, error, connect, disconnect, sendFrame } = useWebSocket();
   const [currentFrame, setCurrentFrame] = useState<string | null>(null);
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
   const narrationPanelRef = useRef<NarrationPanelRef>(null);
@@ -20,14 +20,27 @@ export default function TestPage() {
   
   // Debug: Log when detections change
   useEffect(() => {
-    if (detections) {
-      console.log("Detections updated in TestPage:", {
-        count: detections.detections.length,
-        frameId: detections.frame_id,
-        hasAnnotatedFrame: !!detections.annotated_frame,
-      });
+    const count = detections?.detections?.length || 0;
+    console.log("TestPage: detections state changed", {
+      detections: detections,
+      detectionsIsNull: detections === null,
+      detectionsArray: detections?.detections,
+      detectionsCount: count,
+      frameId: detections?.frame_id,
+      hasAnnotatedFrame: !!detections?.annotated_frame,
+      annotatedFrameLength: detections?.annotated_frame?.length || 0,
+    });
+    
+    // Force a re-render check
+    if (count > 0) {
+      console.log("✅ TestPage: Should show", count, "detections in UI");
     }
   }, [detections]);
+  
+  // Debug: Log connection status changes
+  useEffect(() => {
+    console.log("WebSocket connection status changed:", isConnected);
+  }, [isConnected]);
 
   const handleFrameCapture = (frameBase64: string) => {
     setCurrentFrame(frameBase64);
@@ -53,6 +66,19 @@ export default function TestPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Camera Feed */}
         <div className="lg:col-span-2 space-y-6">
+          
+          {/* Camera Controls (Compact Mode) */}
+          <CameraFeed 
+            mode="compact"
+            videoRef={videoRef}
+            onFrameCapture={handleFrameCapture}
+            onVideoDimensionsChange={(w, h) => setVideoDimensions({ width: w, height: h })}
+            isWebSocketConnected={isConnected}
+            onConnect={connect}
+            onDisconnect={disconnect}
+            onSendFrame={sendFrame}
+          />
+
           {/* Comparison View */}
           <ComparisonView
             originalVideoRef={videoRef}
@@ -60,23 +86,6 @@ export default function TestPage() {
             detections={detections?.detections || []}
             hazards={detections?.hazards || []}
           />
-
-          {/* Original Feed with Overlay */}
-          <div className="relative">
-            <CameraFeed 
-              videoRef={videoRef}
-              onFrameCapture={handleFrameCapture}
-              onVideoDimensionsChange={(w, h) => setVideoDimensions({ width: w, height: h })}
-            />
-            {detections && detections.detections.length > 0 && videoDimensions.width > 0 && (
-              <TrackingOverlay
-                detections={detections.detections}
-                hazards={detections.hazards}
-                videoWidth={videoDimensions.width}
-                videoHeight={videoDimensions.height}
-              />
-            )}
-          </div>
 
           <HazardAlert hazards={detections?.hazards || []} />
 
@@ -94,9 +103,13 @@ export default function TestPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <StatusPanel detectionCount={detections?.detections.length || 0} />
+          <StatusPanel detectionCount={detections?.detections?.length || 0} />
 
-          <DebugPanel />
+          <DebugPanel 
+            isConnected={isConnected}
+            detections={detections}
+            error={error || null}
+          />
 
           <NarrationPanel ref={narrationPanelRef} />
 
