@@ -166,21 +166,21 @@ cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-## ✅ Day 2 Complete!
+## ✅ Day 3 Complete!
 
 **Implemented:**
-- ✅ Narration REST endpoint (`POST /api/narration`)
-- ✅ Comprehensive error handling middleware
-- ✅ Request validation with Pydantic
-- ✅ Processing time measurement
-- ✅ Test scripts for all endpoints
+- ✅ Comprehensive API tests (pytest)
+- ✅ API documentation (FastAPI auto-docs + manual docs)
+- ✅ Setup guide (`SETUP.md`)
+- ✅ Performance logging (initialization time tracking)
+- ✅ Test configuration (`pytest.ini`)
 
-## 📝 Next Steps (Day 3)
+## 📝 Next Steps (Day 4 - Frontend)
 
-- Write API tests
-- Performance optimization
-- Add request rate limiting (optional)
-- Add logging middleware (optional)
+- Initialize Next.js project
+- Set up TypeScript + Tailwind
+- Build interactive test page
+- Implement WebSocket client
 
 ## 📚 Documentation
 

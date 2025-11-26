@@ -46,29 +46,42 @@ class SystemManager:
         self.narrator: Optional[LLMNarrator] = None
         self.initialized = False
         self.frame_id = 0
+        self._initialization_start_time: Optional[float] = None
 
     def initialize(self):
         """Load models and initialize components."""
         if self.initialized:
             return
 
+        self._initialization_start_time = time.time()
         logger.info("Initializing SystemManager...")
 
         try:
             # Initialize tracking and safety
+            logger.info("Loading YOLO tracker...")
             self.tracker = YOLOTracker()
+
+            logger.info("Initializing safety monitor...")
             self.safety_monitor = SafetyMonitor(CAMERA_WIDTH, CAMERA_HEIGHT)
+
+            logger.info("Creating history buffer...")
             self.history_buffer = HistoryBuffer()
 
             # Initialize cognitive components
+            logger.info("Loading BLIP scene composer...")
             self.scene_composer = SceneComposer()
+
+            logger.info("Initializing trajectory analyzer...")
             self.trajectory_analyzer = TrajectoryAnalyzer()
+
+            logger.info("Initializing LLM narrator...")
             self.narrator = LLMNarrator()
 
             self.initialized = True
-            logger.info("SystemManager initialized successfully")
+            init_time = time.time() - self._initialization_start_time
+            logger.info(f"SystemManager initialized successfully in {init_time:.2f}s")
         except Exception as e:
-            logger.error(f"Failed to initialize SystemManager: {e}")
+            logger.error(f"Failed to initialize SystemManager: {e}", exc_info=True)
             raise
 
     def process_frame(

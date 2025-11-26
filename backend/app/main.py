@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -19,11 +20,47 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Create FastAPI app
+
+# Create FastAPI app with lifespan handler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown."""
+    # Startup
+    logger.info("Starting Describe My Environment API...")
+    logger.info("API documentation available at /docs")
+    logger.info("API endpoints:")
+    logger.info("  GET  /api/status - System status")
+    logger.info("  GET  /api/health - Health check")
+    logger.info("  POST /api/narration - Generate narration")
+    logger.info("  WS   /api/ws/camera - Real-time frame processing")
+
+    # Pre-initialize system manager (optional - can be lazy loaded)
+    try:
+        from app.core.system import get_system_manager
+
+        logger.info("Pre-initializing system manager (loading models)...")
+        system_manager = get_system_manager()
+        system_manager.initialize()
+        logger.info("✅ System manager initialized successfully")
+    except Exception as e:
+        logger.warning(
+            f"⚠️  System manager initialization deferred (will initialize on first request): {e}"
+        )
+        logger.info(
+            "   This is normal if models are still downloading or Ollama is not running"
+        )
+
+    yield
+
+    # Shutdown
+    logger.info("Shutting down Describe My Environment API...")
+
+
 app = FastAPI(
     title="Describe My Environment API",
     description="Backend API for dual-loop vision system",
     version="1.0.0-beta",
+    lifespan=lifespan,
 )
 
 # Configure CORS
@@ -61,30 +98,3 @@ def root():
             "websocket": "/api/ws/camera",
         },
     }
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize system on startup."""
-    logger.info("Starting Describe My Environment API...")
-    logger.info("API documentation available at /docs")
-
-    # Pre-initialize system manager (optional - can be lazy loaded)
-    # This will load models on startup instead of first request
-    try:
-        from app.core.system import get_system_manager
-
-        logger.info("Pre-initializing system manager...")
-        system_manager = get_system_manager()
-        system_manager.initialize()
-        logger.info("System manager initialized successfully")
-    except Exception as e:
-        logger.warning(
-            f"System manager initialization deferred (will initialize on first request): {e}"
-        )
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
-    logger.info("Shutting down Describe My Environment API...")
