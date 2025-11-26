@@ -19,14 +19,12 @@ export function useWebSocket() {
     }
 
     try {
-      console.log("Attempting to connect to WebSocket:", WS_URL);
       const ws = new WebSocket(WS_URL);
       wsRef.current = ws;
 
       ws.onopen = () => {
         setIsConnected(true);
         setError(null);
-        console.log("✅ WebSocket connected successfully to", WS_URL);
       };
 
       ws.onmessage = (event) => {
@@ -49,16 +47,6 @@ export function useWebSocket() {
             // Use frame_id to track, but always create new object reference
             const shouldUpdate = detectionResponse.frame_id !== lastFrameIdRef.current;
             lastFrameIdRef.current = detectionResponse.frame_id;
-            
-            if (shouldUpdate) {
-              console.log("useWebSocket: Setting detections state", {
-                detectionsArray: detectionResponse.detections,
-                detectionsCount: detectionResponse.detections.length,
-                frameId: detectionResponse.frame_id,
-                hasAnnotatedFrame: !!detectionResponse.annotated_frame,
-                annotatedFrameLength: detectionResponse.annotated_frame?.length || 0,
-              });
-            }
             
             // Always create a completely new object to ensure React detects the change
             // Use timestamp to force React to see it as a new value
@@ -92,21 +80,13 @@ export function useWebSocket() {
 
       ws.onclose = (event) => {
         setIsConnected(false);
-        console.log("⚠️ WebSocket disconnected", {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean,
-        });
         
         // Auto-reconnect after 3 seconds if not a clean close (1000) or no status (1005)
         // Only reconnect if it was an unexpected disconnect (not 1000 or 1005)
         if (event.code !== 1000 && event.code !== 1005) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("Attempting to reconnect WebSocket...");
             connect();
           }, 3000);
-        } else {
-          console.log("WebSocket closed normally, not reconnecting");
         }
       };
     } catch (err) {

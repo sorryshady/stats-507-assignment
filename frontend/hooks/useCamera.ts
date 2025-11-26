@@ -65,13 +65,10 @@ export function useCamera() {
   }, []);
 
   const stopCamera = useCallback(() => {
-    console.log("Stopping camera...");
-    
     // Stop all tracks in the stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
         track.stop();
-        console.log("Stopped track:", track.kind, track.label);
       });
       streamRef.current = null;
     }
@@ -80,7 +77,6 @@ export function useCamera() {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
       videoRef.current.pause();
-      console.log("Video element cleared");
     }
     
     setIsActive(false);
@@ -130,8 +126,6 @@ export function useCamera() {
         const stream = streamRef.current;
         
         if (video && stream && isActive) {
-          console.log("✅ Video element and stream ready, attaching...");
-          
           // Only attach if not already attached
           if (video.srcObject !== stream) {
             video.srcObject = stream;
@@ -141,7 +135,7 @@ export function useCamera() {
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
-                console.log("✅ Video playing successfully, readyState:", video.readyState);
+                // Video playing successfully
               })
               .catch((playError) => {
                 console.error("❌ Error playing video:", playError);
@@ -150,9 +144,6 @@ export function useCamera() {
           }
         } else if (isActive && retryCount < maxRetries) {
           retryCount++;
-          if (retryCount % 5 === 0) {
-            console.log(`⏳ Waiting for video element... (attempt ${retryCount}/${maxRetries})`);
-          }
           setTimeout(checkAndAttach, 50);
         } else if (retryCount >= maxRetries) {
           console.error("❌ Video element not available after", maxRetries, "attempts");
@@ -174,7 +165,6 @@ export function useCamera() {
         stream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
         video.pause();
-        console.log("✅ Video element cleared on stop");
       }
     }
   }, [isActive]); // Re-run when isActive changes

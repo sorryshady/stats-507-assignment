@@ -49,31 +49,55 @@ export function TrackingOverlay({
       const scaledX2 = x2 * scaleX;
       const scaledY2 = y2 * scaleY;
       
-      // Draw bounding box
-      ctx.strokeStyle = det.confidence > 0.5 ? "#3b82f6" : "#94a3b8";
+      // Draw minimal corners instead of full box for cleaner look
+      const cornerLen = 15;
+      const color = det.confidence > 0.5 ? "rgba(59, 130, 246, 0.9)" : "rgba(148, 163, 184, 0.8)";
+      
+      ctx.strokeStyle = color;
       ctx.lineWidth = 2;
-      ctx.strokeRect(scaledX1, scaledY1, scaledX2 - scaledX1, scaledY2 - scaledY1);
+      
+      // Top-left
+      ctx.beginPath();
+      ctx.moveTo(scaledX1, scaledY1 + cornerLen);
+      ctx.lineTo(scaledX1, scaledY1);
+      ctx.lineTo(scaledX1 + cornerLen, scaledY1);
+      ctx.stroke();
 
-      // Draw label
-      ctx.fillStyle = det.confidence > 0.5 ? "#3b82f6" : "#94a3b8";
-      ctx.font = "14px sans-serif";
-      const label = `${det.class_name} (${(det.confidence * 100).toFixed(0)}%)`;
+      // Top-right
+      ctx.beginPath();
+      ctx.moveTo(scaledX2 - cornerLen, scaledY1);
+      ctx.lineTo(scaledX2, scaledY1);
+      ctx.lineTo(scaledX2, scaledY1 + cornerLen);
+      ctx.stroke();
+
+      // Bottom-left
+      ctx.beginPath();
+      ctx.moveTo(scaledX1, scaledY2 - cornerLen);
+      ctx.lineTo(scaledX1, scaledY2);
+      ctx.lineTo(scaledX1 + cornerLen, scaledY2);
+      ctx.stroke();
+
+      // Bottom-right
+      ctx.beginPath();
+      ctx.moveTo(scaledX2 - cornerLen, scaledY2);
+      ctx.lineTo(scaledX2, scaledY2);
+      ctx.lineTo(scaledX2, scaledY2 - cornerLen);
+      ctx.stroke();
+
+      // Minimal label
+      ctx.fillStyle = color;
+      ctx.font = "500 12px Inter, sans-serif";
+      const label = `${det.class_name}`;
       const textMetrics = ctx.measureText(label);
+      
+      // Label background
       ctx.fillRect(scaledX1, scaledY1 - 20, textMetrics.width + 8, 20);
       
       ctx.fillStyle = "white";
-      ctx.fillText(label, scaledX1 + 4, scaledY1 - 5);
-
-      // Draw center point
-      const centerX = det.center[0] * scaleX;
-      const centerY = det.center[1] * scaleY;
-      ctx.fillStyle = "#3b82f6";
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
-      ctx.fill();
+      ctx.fillText(label, scaledX1 + 4, scaledY1 - 6);
     });
 
-    // Draw hazards with red boxes
+    // Draw hazards with distinct style
     hazards.forEach((hazard) => {
       const [x1, y1, x2, y2] = hazard.box;
       
@@ -83,20 +107,25 @@ export function TrackingOverlay({
       const scaledX2 = x2 * scaleX;
       const scaledY2 = y2 * scaleY;
       
-      // Draw red bounding box
-      ctx.strokeStyle = hazard.priority === "high" ? "#ef4444" : "#f59e0b";
-      ctx.lineWidth = 3;
+      const color = hazard.priority === "high" ? "rgba(239, 68, 68, 0.9)" : "rgba(245, 158, 11, 0.9)";
+      
+      // Dashed box for hazards
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
       ctx.strokeRect(scaledX1, scaledY1, scaledX2 - scaledX1, scaledY2 - scaledY1);
+      ctx.setLineDash([]); // Reset
 
-      // Draw hazard label
-      ctx.fillStyle = hazard.priority === "high" ? "#ef4444" : "#f59e0b";
-      ctx.font = "bold 16px sans-serif";
-      const label = `⚠️ ${hazard.class_name} - ${hazard.priority.toUpperCase()}`;
+      // Warning icon / Label
+      ctx.fillStyle = color;
+      ctx.font = "bold 12px Inter, sans-serif";
+      const label = `⚠️ ${hazard.class_name}`;
       const textMetrics = ctx.measureText(label);
-      ctx.fillRect(scaledX1, scaledY1 - 25, textMetrics.width + 8, 25);
+      
+      ctx.fillRect(scaledX1, scaledY1 - 24, textMetrics.width + 12, 24);
       
       ctx.fillStyle = "white";
-      ctx.fillText(label, scaledX1 + 4, scaledY1 - 8);
+      ctx.fillText(label, scaledX1 + 6, scaledY1 - 7);
     });
   }, [detections, hazards, videoWidth, videoHeight]);
 
@@ -109,4 +138,3 @@ export function TrackingOverlay({
     </div>
   );
 }
-

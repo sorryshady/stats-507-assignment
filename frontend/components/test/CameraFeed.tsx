@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCamera } from "@/hooks/useCamera";
+import { Button } from "@/components/ui/button";
+import { Power, PowerOff } from "lucide-react";
 
 interface CameraFeedProps {
   onFrameCapture?: (frameBase64: string) => void;
@@ -66,12 +68,6 @@ export function CameraFeed({
             if (frame) {
               onSendFrame(frame);
               onFrameCapture?.(frame);
-            } else {
-              // Only log if video exists but isn't ready
-              if (internalVideoRef.current && internalVideoRef.current.readyState < 2) {
-                // Reduce log noise by checking if we recently logged
-                // console.debug("Frame capture skipped. Video readyState:", internalVideoRef.current.readyState);
-              }
             }
           }, 100); // ~10 FPS - adjust as needed
         } else {
@@ -94,22 +90,20 @@ export function CameraFeed({
   // Handle WebSocket connection based on camera state
   useEffect(() => {
     if (isActive && !isWebSocketConnected) {
-      console.log("Camera active, connecting WebSocket...");
       onConnect();
     } else if (!isActive && isWebSocketConnected) {
-      console.log("Camera inactive, disconnecting WebSocket...");
       onDisconnect();
     }
   }, [isActive, isWebSocketConnected, onConnect, onDisconnect]);
 
   return (
-    <Card className="relative overflow-hidden">
-      <div className={`relative bg-black ${mode === "compact" ? "h-0" : "aspect-video"}`}>
+    <Card className="overflow-hidden border-border shadow-sm">
+      <div className={`relative bg-muted/20 ${mode === "compact" ? "h-0" : "aspect-video"}`}>
         {!hasPermission && hasPermission !== null && mode !== "compact" && (
-          <div className="absolute inset-0 flex items-center justify-center text-white">
-            <div className="text-center space-y-4">
-              <p className="text-lg">Camera permission denied</p>
-              <p className="text-sm text-gray-400">{error}</p>
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+            <div className="text-center space-y-2">
+              <p className="font-medium">Camera permission denied</p>
+              <p className="text-xs">{error}</p>
             </div>
           </div>
         )}
@@ -127,81 +121,42 @@ export function CameraFeed({
           muted
           className={`w-full h-full object-cover ${(!isActive || mode === "compact") ? "hidden" : ""}`}
           style={{ backgroundColor: "black" }}
-          onLoadedMetadata={(e) => {
-              const video = e.currentTarget;
-              console.log("✅ Video metadata loaded:", {
-                width: video.videoWidth,
-                height: video.videoHeight,
-                readyState: video.readyState,
-                srcObject: video.srcObject ? "present" : "null",
-              });
-              onVideoDimensionsChange?.(video.videoWidth, video.videoHeight);
-            }}
-            onLoadedData={(e) => {
-              const video = e.currentTarget;
-              console.log("✅ Video data loaded:", {
-                readyState: video.readyState,
-                videoWidth: video.videoWidth,
-                videoHeight: video.videoHeight,
-              });
-            }}
-            onCanPlay={(e) => {
-              console.log("✅ Video can play:", {
-                readyState: e.currentTarget.readyState,
-              });
-            }}
-            onPlay={() => {
-              console.log("✅ Video started playing");
-            }}
-            onError={(e) => {
-              const video = e.currentTarget;
-              console.error("❌ Video element error:", {
-                error: video.error,
-                errorCode: video.error?.code,
-                errorMessage: video.error?.message,
-              });
-            }}
-          />
+          onLoadedMetadata={(e) => onVideoDimensionsChange?.(e.currentTarget.videoWidth, e.currentTarget.videoHeight)}
+        />
 
         {isActive && mode !== "compact" && (
-          <div className="absolute top-4 left-4 flex gap-2">
-            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              isWebSocketConnected ? "bg-green-500 text-white" : "bg-red-500 text-white"
-            }`}>
-              {isWebSocketConnected ? "Connected" : "Disconnected"}
-            </div>
+          <div className="absolute top-3 left-3 flex gap-2">
+             <div className={`w-2 h-2 rounded-full mt-1.5 ${isWebSocketConnected ? "bg-green-500" : "bg-red-500"}`} />
           </div>
         )}
       </div>
 
-      <div className="p-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-muted-foreground">
-            {isActive ? "Camera active" : "Camera inactive"}
-          </div>
-          {isActive && (
-            <div className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-              isWebSocketConnected ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
-            }`}>
-              {isWebSocketConnected ? "WS Connected" : "WS Disconnected"}
-            </div>
-          )}
+      <div className="p-4 flex justify-between items-center bg-card">
+        <div className="flex items-center gap-3">
+           <div className={`w-2 h-2 rounded-full ${isActive ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+           <span className="text-sm font-medium">
+            {isActive ? "Camera Active" : "Camera Standby"}
+           </span>
         </div>
-        <div className="flex gap-2">
+        <div>
           {!isActive ? (
-            <button
+            <Button
               onClick={startCamera}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              variant="default"
+              size="sm"
+              className="gap-2"
             >
-              Start Camera
-            </button>
+              <Power className="w-4 h-4" /> Start Feed
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={stopCamera}
-              className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors"
+              variant="destructive"
+              size="sm"
+              className="gap-2"
             >
-              Stop Camera
-            </button>
+              <PowerOff className="w-4 h-4" /> Stop Feed
+            </Button>
           )}
         </div>
       </div>

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
+  { href: "/challenges", label: "Challenges" },
   { href: "/roadmap", label: "Roadmap" },
   { href: "/demo", label: "Demo" },
   { href: "/test", label: "Test" },
@@ -23,13 +23,13 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">D</span>
+            <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
+              <span className="text-white dark:text-black font-bold text-lg">D</span>
             </div>
-            <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="font-bold text-xl text-foreground">
               Describe My Environment
             </span>
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="outline" className="ml-2">
               Beta
             </Badge>
           </Link>
@@ -42,7 +42,7 @@ export function Navigation() {
                   variant={pathname === item.href ? "default" : "ghost"}
                   className={cn(
                     "transition-colors",
-                    pathname === item.href && "bg-primary"
+                    pathname === item.href && "bg-primary text-primary-foreground"
                   )}
                 >
                   {item.label}
@@ -74,4 +74,3 @@ export function Navigation() {
     </nav>
   );
 }
-

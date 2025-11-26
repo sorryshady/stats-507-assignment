@@ -119,6 +119,20 @@ class SceneComposer:
             # Add more patterns as needed
         ]
 
+        # Fix common hallucinations for webcam feeds
+        # BLIP often mistakes a person looking at a webcam for a person looking in a mirror
+        if "mirror" in caption_lower:
+            logger.info(f"Correcting 'mirror' hallucination in caption: {caption}")
+            caption = re.sub(r"in front of a mirror", "facing the camera", caption, flags=re.IGNORECASE)
+            caption = re.sub(r"looking in a mirror", "looking at the camera", caption, flags=re.IGNORECASE)
+            caption = re.sub(r"looking into a mirror", "looking at the camera", caption, flags=re.IGNORECASE)
+            caption = re.sub(r"at a mirror", "at the camera", caption, flags=re.IGNORECASE)
+            # General fallback if phrase structure is different
+            if "mirror" in caption.lower():
+                 caption = caption.replace("mirror", "camera")
+            # Update caption_lower for subsequent checks
+            caption_lower = caption.lower()
+
         # Check if caption contains inappropriate content
         for pattern in inappropriate_patterns:
             if re.search(pattern, caption_lower):

@@ -43,6 +43,7 @@ class LLMNarrator:
             entities_text = "- No objects detected."
         
         prompt = f"""SYSTEM: You are a helpful assistant for a blind user. Be concise and direct. Only describe what is certainly present. Do not ask questions.
+If the context mentions a "mirror" or "reflection" and it seems to be describing the user themselves (e.g., "standing in front of a mirror"), assume it is a hallucination caused by the camera feed and describe it as the person being present or facing the camera.
 
 USER:
 Context: "{scene_description}"

@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import type { StatusResponse } from "@/lib/types";
-import { Activity, Cpu, CheckCircle2, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, XCircle, Cpu, Server } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -16,14 +16,6 @@ interface StatusPanelProps {
 export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Debug: Log when detectionCount changes
-  useEffect(() => {
-    console.log("StatusPanel: detectionCount prop changed", {
-      detectionCount,
-      type: typeof detectionCount,
-    });
-  }, [detectionCount]);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -47,13 +39,12 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
   }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="w-5 h-5" />
+    <Card className="border-border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Server className="w-5 h-5" />
           System Status
         </CardTitle>
-        <CardDescription>Backend service status and model information</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
@@ -64,73 +55,62 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
         ) : status ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Initialized</span>
+              <span className="text-sm font-medium">Backend Service</span>
               {status.initialized ? (
-                <Badge variant="default" className="bg-green-500">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Ready
-                </Badge>
+                <div className="flex items-center text-green-600 text-sm font-medium">
+                    <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                    Ready
+                </div>
               ) : (
-                <Badge variant="secondary">
-                  <XCircle className="w-3 h-3 mr-1" />
-                  Not Ready
-                </Badge>
+                <div className="flex items-center text-destructive text-sm font-medium">
+                    <div className="w-2 h-2 rounded-full bg-destructive mr-2" />
+                    Not Ready
+                </div>
               )}
             </div>
 
-            <div className="space-y-2 pt-2 border-t">
+            <div className="space-y-2 pt-3 border-t">
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4" />
-                  YOLO
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  YOLO Model
                 </span>
-                <Badge variant={status.models.yolo === "loaded" ? "default" : "secondary"}>
-                  {status.models.yolo}
-                </Badge>
+                <span className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.yolo === "loaded" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}>
+                    {status.models.yolo.toUpperCase()}
+                </span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4" />
-                  BLIP
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  BLIP Model
                 </span>
-                <Badge variant={status.models.blip === "loaded" ? "default" : "secondary"}>
-                  {status.models.blip}
-                </Badge>
+                 <span className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.blip === "loaded" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}>
+                    {status.models.blip.toUpperCase()}
+                </span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4" />
+                <span className="flex items-center gap-2 text-muted-foreground">
                   Ollama
                 </span>
-                <Badge variant={status.models.ollama === "available" ? "default" : "secondary"}>
-                  {status.models.ollama}
-                </Badge>
+                 <span className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.ollama === "available" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}>
+                    {status.models.ollama.toUpperCase()}
+                </span>
               </div>
             </div>
 
-            <div className="pt-2 border-t">
+            <div className="pt-3 border-t">
               <div className="flex items-center justify-between text-sm">
-                <span>GPU</span>
-                <Badge variant={status.gpu.available ? "default" : "secondary"}>
-                  {status.gpu.available ? status.gpu.type : "Not Available"}
+                <span className="text-muted-foreground">Hardware Acceleration</span>
+                <Badge variant={status.gpu.available ? "outline" : "secondary"}>
+                  {status.gpu.available ? status.gpu.type : "CPU Only"}
                 </Badge>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t">
-              <div className="text-sm">
-                <span className="font-medium">Active Detections: </span>
-                <span className="font-semibold text-primary">{detectionCount}</span>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-destructive">Failed to fetch status</div>
+          <div className="text-sm text-destructive text-center py-2">Service Unavailable</div>
         )}
       </CardContent>
     </Card>
   );
 }
-
