@@ -1,40 +1,42 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Layers, Monitor } from "lucide-react";
+import type { Detection, Hazard } from "@/lib/types";
 
 interface ComparisonViewProps {
   originalVideoRef: React.RefObject<HTMLVideoElement | null>;
   annotatedFrame?: string;
-  detections: any[];
-  hazards: any[];
+  detections: Detection[];
+  hazards: Hazard[];
 }
 
 export function ComparisonView({
   originalVideoRef,
   annotatedFrame,
   detections,
-  hazards,
 }: ComparisonViewProps) {
   const comparisonVideoRef = useRef<HTMLVideoElement>(null);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
 
-  // Update image source when annotated frame changes
-  useEffect(() => {
+  // Generate stable key and image source without using Date.now() in render
+  const { imageSrc, imageKey } = useMemo(() => {
     if (annotatedFrame && annotatedFrame.length > 0) {
-      // Ensure proper data URL format
       const src = annotatedFrame.startsWith("data:")
         ? annotatedFrame
         : `data:image/jpeg;base64,${annotatedFrame}`;
-
-      setImageSrc(src);
-    } else {
-      setImageSrc(null);
+      return {
+        imageSrc: src,
+        imageKey: `annotated-${detections.length}-${annotatedFrame.substring(0, 20)}`,
+      };
     }
-  }, [annotatedFrame]);
+    return {
+      imageSrc: null,
+      imageKey: `annotated-${detections.length}-none`,
+    };
+  }, [annotatedFrame, detections.length]);
 
   // Clone the stream to the comparison video element
   useEffect(() => {
@@ -72,7 +74,7 @@ export function ComparisonView({
         comparisonVideo.pause();
       }
     }
-  }, [originalVideoRef, originalVideoRef.current?.srcObject]);
+  }, [originalVideoRef]);
 
   return (
     <Card className="border-border shadow-sm">
@@ -123,8 +125,9 @@ export function ComparisonView({
                 </div>
                 <div className="relative aspect-video bg-black rounded-sm overflow-hidden border border-border/50">
                   {imageSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      key={`annotated-${detections.length}-${Date.now()}`}
+                      key={imageKey}
                       src={imageSrc}
                       alt="Annotated frame"
                       className="w-full h-full object-cover"
@@ -160,10 +163,11 @@ export function ComparisonView({
                 className="w-full h-full object-cover"
               />
               {annotatedFrame && (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={`data:image/jpeg;base64,${annotatedFrame}`}
                   alt="Annotated overlay"
-                  className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+                  className="absolute top-0 left-0 w-full h-full object-cover opacity-60 pointer-events-none"
                 />
               )}
             </div>

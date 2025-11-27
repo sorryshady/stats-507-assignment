@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import type { StatusResponse } from "@/lib/types";
-import { Activity, CheckCircle2, XCircle, Cpu, Server } from "lucide-react";
+import { Server } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -13,7 +13,9 @@ interface StatusPanelProps {
   detectionCount?: number;
 }
 
-export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
+export function StatusPanel({ detectionCount }: StatusPanelProps) {
+  // detectionCount prop reserved for future use
+  void detectionCount;
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

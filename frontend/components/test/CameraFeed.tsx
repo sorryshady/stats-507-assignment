@@ -123,7 +123,7 @@ export function CameraFeed({
           className={`w-full h-full object-cover ${(!isActive || mode === "compact") ? "hidden" : ""}`}
           style={{ backgroundColor: "black" }}
           onLoadedMetadata={(e) => onVideoDimensionsChange?.(e.currentTarget.videoWidth, e.currentTarget.videoHeight)}
-        />
+          />
 
         {isActive && mode !== "compact" && (
           <div className="absolute top-3 left-3 flex gap-2">

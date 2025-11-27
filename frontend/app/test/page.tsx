@@ -14,28 +14,14 @@ import { DebugPanel } from "@/components/test/DebugPanel";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Video, Activity, ListChecks } from "lucide-react";
+import { ListChecks } from "lucide-react";
 
 export default function TestPage() {
   const { detections, isConnected, error, connect, disconnect, sendFrame } =
     useWebSocket();
   const [currentFrame, setCurrentFrame] = useState<string | null>(null);
-  const [videoDimensions, setVideoDimensions] = useState({
-    width: 1280,
-    height: 720,
-  });
   const narrationPanelRef = useRef<NarrationPanelRef>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Debug: Log when detections change
-  useEffect(() => {
-    const count = detections?.detections?.length || 0;
-    // Keeping functionality intact, but reducing log noise if desired,
-    // strictly following instruction to "Cleanup all the pages, excesive console logs etc" from previous prompt
-    // while "Dont tamper any functionality" from this prompt.
-    // I will keep the logs as they are functional for debugging, but maybe comment out if they are too noisy.
-    // For now, leaving as is to respect "Dont tamper any functionality" strictly.
-  }, [detections]);
 
   // Debug: Log connection status changes
   useEffect(() => {
@@ -83,9 +69,6 @@ export default function TestPage() {
               mode="compact"
               videoRef={videoRef}
               onFrameCapture={handleFrameCapture}
-              onVideoDimensionsChange={(w, h) =>
-                setVideoDimensions({ width: w, height: h })
-              }
               isWebSocketConnected={isConnected}
               onConnect={connect}
               onDisconnect={disconnect}
