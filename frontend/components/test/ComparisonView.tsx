@@ -40,40 +40,36 @@ export function ComparisonView({
 
   // Clone the stream to the comparison video element
   useEffect(() => {
-    const originalVideo = originalVideoRef.current;
-    const comparisonVideo = comparisonVideoRef.current;
+    // Poll for the stream availability since ref changes don't trigger re-renders
+    const checkStream = () => {
+      const originalVideo = originalVideoRef.current;
+      const comparisonVideo = comparisonVideoRef.current;
 
-    if (originalVideo && comparisonVideo && originalVideo.srcObject) {
-      const stream = originalVideo.srcObject as MediaStream;
-      // Clone the stream tracks
-      const clonedStream = new MediaStream();
-      stream.getVideoTracks().forEach((track) => {
-        clonedStream.addTrack(track.clone());
-      });
-      comparisonVideo.srcObject = clonedStream;
-      comparisonVideo.play().catch(console.error);
+      if (originalVideo && comparisonVideo && originalVideo.srcObject) {
+        const stream = originalVideo.srcObject as MediaStream;
 
-      return () => {
-        // Cleanup: stop cloned tracks when component unmounts or stream changes
-        if (comparisonVideo.srcObject) {
-          const clonedStream = comparisonVideo.srcObject as MediaStream;
-          clonedStream.getTracks().forEach((track) => track.stop());
-          comparisonVideo.srcObject = null;
-          comparisonVideo.pause();
+        // Check if we already have this stream assigned
+        if (comparisonVideo.srcObject !== stream) {
+          // Clone the stream tracks
+          const clonedStream = new MediaStream();
+          stream.getVideoTracks().forEach((track) => {
+            clonedStream.addTrack(track.clone());
+          });
+          comparisonVideo.srcObject = clonedStream;
+          comparisonVideo.play().catch(console.error);
         }
-      };
-    } else if (
-      comparisonVideo &&
-      (!originalVideo || !originalVideo.srcObject)
-    ) {
-      // Stop comparison video if original stream is gone
-      if (comparisonVideo.srcObject) {
+      } else if (comparisonVideo && comparisonVideo.srcObject) {
+        // Cleanup if original stream is gone
         const stream = comparisonVideo.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
         comparisonVideo.srcObject = null;
-        comparisonVideo.pause();
       }
-    }
+    };
+
+    const intervalId = setInterval(checkStream, 1000); // Check every second
+    checkStream(); // Check immediately
+
+    return () => clearInterval(intervalId);
   }, [originalVideoRef]);
 
   return (
@@ -167,7 +163,7 @@ export function ComparisonView({
                 <img
                   src={`data:image/jpeg;base64,${annotatedFrame}`}
                   alt="Annotated overlay"
-                  className="absolute top-0 left-0 w-full h-full object-cover opacity-60 pointer-events-none"
+                  className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
                 />
               )}
             </div>

@@ -18,28 +18,40 @@ interface CameraFeedProps {
   mode?: "default" | "compact";
 }
 
-export function CameraFeed({ 
-  onFrameCapture, 
-  onVideoDimensionsChange, 
+export function CameraFeed({
+  onFrameCapture,
+  onVideoDimensionsChange,
   videoRef: externalVideoRef,
   isWebSocketConnected,
   onConnect,
   onDisconnect,
   onSendFrame,
-  mode = "default"
+  mode = "default",
 }: CameraFeedProps) {
-  const { videoRef: internalVideoRef, isActive, hasPermission, error, startCamera, stopCamera, captureFrame } = useCamera();
-  
+  const {
+    videoRef: internalVideoRef,
+    isActive,
+    hasPermission,
+    error,
+    startCamera,
+    stopCamera,
+    captureFrame,
+  } = useCamera();
+
   // Callback ref to set both internal and external refs
   const setVideoRef = (node: HTMLVideoElement | null) => {
     // Always set internal ref (used by useCamera hook)
-    (internalVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = node;
+    (
+      internalVideoRef as React.MutableRefObject<HTMLVideoElement | null>
+    ).current = node;
     // Also set external ref if provided (used by ComparisonView)
     if (externalVideoRef) {
-      (externalVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = node;
+      (
+        externalVideoRef as React.MutableRefObject<HTMLVideoElement | null>
+      ).current = node;
     }
   };
-  
+
   const frameIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle frame capture
@@ -55,13 +67,16 @@ export function CameraFeed({
       const startFrameCapture = () => {
         if (!isActive || !isWebSocketConnected) return;
 
-        if (internalVideoRef.current && internalVideoRef.current.readyState >= 2) {
-          // Capture and send frames at ~5 FPS to allow backend processing time
-          // reducing latency-induced tracking loss
+        if (
+          internalVideoRef.current &&
+          internalVideoRef.current.readyState >= 2
+        ) {
+          // Capture and send frames at ~20 FPS (reduced for performance)
           frameIntervalRef.current = setInterval(() => {
             // Double check active state inside interval
             if (!isActive || !isWebSocketConnected) {
-              if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+              if (frameIntervalRef.current)
+                clearInterval(frameIntervalRef.current);
               return;
             }
 
@@ -70,13 +85,13 @@ export function CameraFeed({
               onSendFrame(frame);
               onFrameCapture?.(frame);
             }
-          }, 200); // ~5 FPS
+          }, 50); // ~20 FPS - adjust as needed
         } else {
           // Retry after a short delay
           setTimeout(startFrameCapture, 200);
         }
       };
-      
+
       startFrameCapture();
     }
 
@@ -86,7 +101,14 @@ export function CameraFeed({
         frameIntervalRef.current = null;
       }
     };
-  }, [isActive, isWebSocketConnected, captureFrame, onSendFrame, onFrameCapture, internalVideoRef]);
+  }, [
+    isActive,
+    isWebSocketConnected,
+    captureFrame,
+    onSendFrame,
+    onFrameCapture,
+    internalVideoRef,
+  ]);
 
   // Handle WebSocket connection based on camera state
   useEffect(() => {
@@ -99,7 +121,9 @@ export function CameraFeed({
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
-      <div className={`relative bg-muted/20 ${mode === "compact" ? "h-0" : "aspect-video"}`}>
+      <div
+        className={`relative bg-muted/20 ${mode === "compact" ? "h-0" : "aspect-video"}`}
+      >
         {!hasPermission && hasPermission !== null && mode !== "compact" && (
           <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
             <div className="text-center space-y-2">
@@ -108,7 +132,7 @@ export function CameraFeed({
             </div>
           </div>
         )}
-        
+
         {hasPermission === null && mode !== "compact" && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Skeleton className="w-full h-full" />
@@ -120,24 +144,33 @@ export function CameraFeed({
           autoPlay={isActive}
           playsInline
           muted
-          className={`w-full h-full object-cover ${(!isActive || mode === "compact") ? "hidden" : ""}`}
+          className={`w-full h-full object-cover ${!isActive || mode === "compact" ? "hidden" : ""}`}
           style={{ backgroundColor: "black" }}
-          onLoadedMetadata={(e) => onVideoDimensionsChange?.(e.currentTarget.videoWidth, e.currentTarget.videoHeight)}
-          />
+          onLoadedMetadata={(e) =>
+            onVideoDimensionsChange?.(
+              e.currentTarget.videoWidth,
+              e.currentTarget.videoHeight,
+            )
+          }
+        />
 
         {isActive && mode !== "compact" && (
           <div className="absolute top-3 left-3 flex gap-2">
-             <div className={`w-2 h-2 rounded-full mt-1.5 ${isWebSocketConnected ? "bg-green-500" : "bg-red-500"}`} />
+            <div
+              className={`w-2 h-2 rounded-full mt-1.5 ${isWebSocketConnected ? "bg-green-500" : "bg-red-500"}`}
+            />
           </div>
         )}
       </div>
 
       <div className="p-4 flex justify-between items-center bg-card">
         <div className="flex items-center gap-3">
-           <div className={`w-2 h-2 rounded-full ${isActive ? "bg-green-500" : "bg-muted-foreground/30"}`} />
-           <span className="text-sm font-medium">
+          <div
+            className={`w-2 h-2 rounded-full ${isActive ? "bg-green-500" : "bg-muted-foreground/30"}`}
+          />
+          <span className="text-sm font-medium">
             {isActive ? "Camera Active" : "Camera Standby"}
-           </span>
+          </span>
         </div>
         <div>
           {!isActive ? (
