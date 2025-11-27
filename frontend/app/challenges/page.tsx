@@ -134,8 +134,8 @@ export default function ChallengesPage() {
           >
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="space-y-1 w-full">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Badge
                       variant="outline"
                       className="font-mono text-xs uppercase tracking-wider"
