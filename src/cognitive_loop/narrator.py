@@ -51,8 +51,11 @@ Entities (detected movement):
 {entities_text}
 
 TASK: Synthesize the context and entities into one natural sentence.
-IMPORTANT: The entities likely correspond to the subjects in the context (e.g., a "person" entity is likely the same as "a man" or "a woman" in the context). Do not treat them as separate people unless clearly distinct.
-Prioritize safety information."""
+IMPORTANT RULES:
+1. The entities likely correspond to the subjects in the context (e.g., a "person" entity is likely the same as "a man" or "a woman" in the context). Do not treat them as separate people unless clearly distinct.
+2. If the context mentions a person holding an object (e.g., "holding a phone", "with a remote"), and that object also appears in the entities list with movement, DO NOT describe the object as moving independently. The object is being held and moves with the person. Simply mention the person is holding it.
+3. Small handheld objects (cell phone, remote, cup, etc.) moving in the same direction as a person are almost certainly held items, not independent threats.
+4. Prioritize safety information about truly independent moving objects (vehicles, other people, animals)."""
         
         return prompt
     

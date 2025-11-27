@@ -2,33 +2,34 @@
 
 ## Current Focus
 
-- **Fixing Narration Hallucinations**: Addressed an issue where stale tracking history caused the LLM to narrate objects that were no longer present (e.g., "cell phone leaving").
-- Tuning the narration and trajectory analysis to reduce hallucinations and false positives.
-- Improved `trajectory.py` thresholds to prevent "rapidly approaching" false alarms for stationary users.
-- Updated `narrator.py` prompt to help the LLM resolve entity duplication (understanding that "person" entity = "man" in scene).
+- **Fixing Narration Hallucinations**: 
+  - Addressed "stale object" hallucinations where the system described objects that had left the scene.
+  - **Generalized Held Object Filtering**: Implemented a comprehensive filter for handheld objects (phones, remotes, cups, books, etc.).
+    - If BLIP detects a person "holding/using/carrying" something, and YOLO detects a corresponding handheld object moving, the movement alert is suppressed.
+    - This prevents the "flying remote" or "flying cup" effect when the user or another person moves a held object.
+  - **Fixed "Self-Phone" Narration**: Specifically optimized filtering for "cell phone" when "selfie" or "camera" is mentioned.
+- Tuning the narration and trajectory analysis.
 - Refactoring frontend to a minimalist "cool SaaS" aesthetic.
-- Addressing specific hallucinations (e.g., "mirror" vs "camera") and repetition loops in the scene description pipeline.
 
 ## Recent Changes
 
 - **Backend**:
-
-  - `backend/app/core/system.py`:
-    - Added `cleanup_stale_objects(frame_id)` to `process_frame` (runs every 30 frames) to ensure `HistoryBuffer` doesn't retain old objects indefinitely during real-time tracking.
-    - Added timestamp-based filtering to `generate_narration`. Now, only objects detected within the last 2 seconds are passed to the trajectory analyzer and LLM. This prevents "ghost" objects from previous sessions being described.
-  - `src/reflex_loop/tracker.py`: Explicitly configured YOLO to use `tracker="bytetrack.yaml"` to ensure robust multi-object tracking.
-  - `src/cognitive_loop/scene_composer.py`: Added `repetition_penalty=1.5` and `no_repeat_ngram_size=2` to BLIP generation.
-  - `src/cognitive_loop/trajectory.py`: Increased movement thresholds to filter hand movements.
-  - `src/cognitive_loop/narrator.py`: Updated system prompt to handle "mirror" hallucinations.
-
-- **Frontend**:
-  - `frontend/components/test/CameraFeed.tsx`: Added "Camera Limitations & Testing Guide" modal.
-  - `frontend/components/test/ComparisonView.tsx`: Fixed flickering.
-  - `frontend/hooks/useCamera.ts`: Fixed resource leaks.
-  - `frontend/app/challenges/page.tsx`: Updated with technical challenges.
+  - `src/cognitive_loop/trajectory.py`: 
+    - **Expanded Handheld Classes**: Added `cup`, `bottle`, `glass`, `wine glass`, `book`, `toothbrush`, `scissors`, etc. to `HANDHELD_CLASSES` set.
+  - `backend/app/core/system.py`: 
+    - **Generalized Context-Aware Filtering**:
+      - Checks for interaction keywords: "holding", "using", "carrying", "taking a", "with a".
+      - If present, iterates through all `object_movements`.
+      - If a movement matches a `HANDHELD_CLASS` **AND** that class (or a synonym) appears in the scene description, it is filtered out.
+      - Special handling remains for phones/cameras (selfie context).
+    - Added `cleanup_stale_objects(frame_id)` to `process_frame` (runs every 30 frames).
+    - Added timestamp-based filtering to `generate_narration` (only objects < 2s old are processed).
+  - `src/cognitive_loop/narrator.py`: 
+    - Updated system prompt with explicit **"Held Objects"** guidelines.
+  - `src/reflex_loop/tracker.py`: Explicitly configured YOLO to use `tracker="bytetrack.yaml"`.
 
 ## Next Steps
 
-- Validate the "stale history" fix with the user (verify if "cell phone leaving" persists).
-- Monitor for any new edge cases in narration.
+- Validate the generalized "held object" filtering with various objects (remote, cup, book).
+- Monitor for any false negatives (e.g., throwing a ball might be filtered if "holding a ball" was the previous context? - Unlikely as BLIP updates every frame).
 - Investigate the "Stream Freeze" issue.

@@ -192,7 +192,7 @@ class SystemManager:
 
         # Analyze trajectories
         tracked_objects = self.history_buffer.get_all_objects()
-        
+
         # Filter out stale objects (older than 2 seconds) to prevent describing past events
         current_time = time.time()
         active_objects = {}
@@ -201,8 +201,55 @@ class SystemManager:
             # Check if object has a latest detection and if it's recent (< 2 seconds old)
             if latest and (current_time - latest.timestamp < 2.0):
                 active_objects[obj_id] = obj
-                
+
         object_movements = self.trajectory_analyzer.analyze_all_objects(active_objects)
+
+        # Context-aware filtering of handheld objects
+        # If the scene description mentions a person holding an object, suppress that object's movement alerts
+        # This fixes "self-phone" narration and other held-object hallucinations
+        scene_lower = scene_description.lower()
+
+        # Keywords that imply interaction/holding
+        interaction_keywords = ["holding", "using", "carrying", "taking a", "with a"]
+        is_interacting = any(k in scene_lower for k in interaction_keywords)
+
+        if is_interacting or "selfie" in scene_lower:
+            filtered_movements = []
+            handheld_classes = self.trajectory_analyzer.HANDHELD_CLASSES
+
+            for movement in object_movements:
+                movement_lower = movement.lower()
+
+                # Check if this movement describes a handheld object
+                is_handheld_movement = any(
+                    cls in movement_lower for cls in handheld_classes
+                )
+
+                if is_handheld_movement:
+                    # Special Case: Phone/Camera
+                    if (
+                        "cell phone" in movement_lower or "mobile" in movement_lower
+                    ) and (
+                        "phone" in scene_lower
+                        or "camera" in scene_lower
+                        or "selfie" in scene_lower
+                    ):
+                        continue
+
+                    # General Case: Object mentioned in scene
+                    # If the specific object class is mentioned in the scene description, filter it
+                    # (e.g. movement="Remote: moving...", scene="person holding a remote")
+                    should_skip = False
+                    for cls in handheld_classes:
+                        if cls in movement_lower and cls in scene_lower:
+                            should_skip = True
+                            break
+
+                    if should_skip:
+                        continue
+
+                filtered_movements.append(movement)
+            object_movements = filtered_movements
 
         # Generate narration
         narration = self.narrator.generate_narration_from_components(
