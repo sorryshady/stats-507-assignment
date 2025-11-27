@@ -21,6 +21,7 @@ export function ComparisonView({
 }: ComparisonViewProps) {
   const comparisonVideoRef = useRef<HTMLVideoElement>(null);
   const currentStreamIdRef = useRef<string | null>(null);
+  const clonedStreamRef = useRef<MediaStream | null>(null);
 
   // Generate stable key and image source without using Date.now() in render
   const { imageSrc, imageKey } = useMemo(() => {
@@ -46,28 +47,44 @@ export function ComparisonView({
       const originalVideo = originalVideoRef.current;
       const comparisonVideo = comparisonVideoRef.current;
 
-      if (originalVideo && comparisonVideo && originalVideo.srcObject) {
+      if (originalVideo && originalVideo.srcObject) {
         const stream = originalVideo.srcObject as MediaStream;
+        
+        // If we have a comparison video element but it doesn't have a stream yet,
+        // or if the stream ID has changed
+        if (comparisonVideo && currentStreamIdRef.current !== stream.id) {
+          // Cleanup previous cloned stream if exists
+          if (clonedStreamRef.current) {
+            clonedStreamRef.current.getTracks().forEach(track => {
+              track.stop();
+              track.enabled = false;
+            });
+          }
 
-        // Check if we already have this stream assigned (by ID) to avoid unnecessary cloning/reassigning
-        if (currentStreamIdRef.current !== stream.id) {
           // Clone the stream tracks
           const clonedStream = new MediaStream();
           stream.getVideoTracks().forEach((track) => {
             clonedStream.addTrack(track.clone());
           });
+          
+          clonedStreamRef.current = clonedStream;
           comparisonVideo.srcObject = clonedStream;
           currentStreamIdRef.current = stream.id;
           comparisonVideo.play().catch(console.error);
         }
-      } else if (comparisonVideo && comparisonVideo.srcObject) {
-        // Cleanup if original stream is gone
-        const stream = comparisonVideo.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => {
-          track.stop();
-          track.enabled = false;
-        });
-        comparisonVideo.srcObject = null;
+      } else {
+        // If original video is gone or stream is stopped, cleanup everything
+        if (clonedStreamRef.current) {
+          clonedStreamRef.current.getTracks().forEach((track) => {
+            track.stop();
+            track.enabled = false;
+          });
+          clonedStreamRef.current = null;
+        }
+        
+        if (comparisonVideo) {
+          comparisonVideo.srcObject = null;
+        }
         currentStreamIdRef.current = null;
       }
     };
@@ -75,7 +92,17 @@ export function ComparisonView({
     const intervalId = setInterval(checkStream, 1000); // Check every second
     checkStream(); // Check immediately
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+      // Ensure cleanup on unmount
+      if (clonedStreamRef.current) {
+        clonedStreamRef.current.getTracks().forEach((track) => {
+          track.stop();
+          track.enabled = false;
+        });
+        clonedStreamRef.current = null;
+      }
+    };
   }, [originalVideoRef]);
 
   return (
