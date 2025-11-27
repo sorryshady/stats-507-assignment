@@ -43,15 +43,15 @@ class TrajectoryAnalyzer:
             # Require more significant movement to classify as non-stationary
             movement_type = self._classify_movement(
                 delta_x, delta_y, area_growth, 
-                velocity_threshold=5.0,
-                area_threshold=15.0  # Increased to avoid false positives
+                velocity_threshold=8.0,
+                area_threshold=35.0  # Increased to avoid false positives
             )
         else:
-            # Defaults: velocity > 2.0, area > 10.0 (increased from 5.0)
+            # Defaults: velocity > 5.0, area > 25.0 (increased to filter hand movements)
             movement_type = self._classify_movement(
                 delta_x, delta_y, area_growth,
-                velocity_threshold=2.0,
-                area_threshold=10.0
+                velocity_threshold=5.0,
+                area_threshold=25.0
             )
         
         # Format description
@@ -113,7 +113,7 @@ class TrajectoryAnalyzer:
             return f"{class_name}: Stationary"
         
         elif movement_type == "Approaching":
-            if abs(area_growth) > 40:  # Require 40% growth for "rapid"
+            if abs(area_growth) > 60:  # Require 60% growth for "rapid"
                 return f"{class_name}: Approaching rapidly"
             else:
                 return f"{class_name}: Approaching"

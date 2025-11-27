@@ -8,13 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Lightbulb,
-  TrendingUp,
-} from "lucide-react";
+import { CheckCircle2, Clock, Lightbulb, TrendingUp } from "lucide-react";
 
 export default function ChallengesPage() {
   const challenges = [
@@ -22,9 +16,18 @@ export default function ChallengesPage() {
       title: "Monocular Depth & Motion",
       category: "Computer Vision",
       description:
-        "Using a single camera makes accurate depth perception and relative motion detection (e.g., distinguishing between user moving vs. object moving) highly unreliable and buggy.",
+        "Using a single camera makes accurate depth perception and relative motion detection highly unreliable. Small movements (like waving a hand) can cause significant bounding box changes, falsely triggering 'approaching' alerts.",
       solution:
-        "Future integration of stereo cameras, LiDAR sensors, or depth-estimation AI models (like MiDaS) to create a true 3D spatial map.",
+        "Currently mitigated by filtering insignificant movements (only tracking extremely significant bounding box changes). Future integration of stereo cameras, LiDAR, or depth-estimation AI (MiDaS) required for true 3D mapping.",
+      status: "In Progress",
+    },
+    {
+      title: "Stream Freeze on Generation",
+      category: "Performance",
+      description:
+        "When manually triggering 'Generate Now', the video feed and processed output momentarily freeze or lag. This is likely due to the blocking nature of the inference request or network latency spikes during heavy data transmission.",
+      solution:
+        "Optimizing the WebSocket handling to be non-blocking and investigating if the backend inference is blocking the main thread. Future move to WebWorkers for frontend processing.",
       status: "In Progress",
     },
     {
@@ -118,8 +121,8 @@ export default function ChallengesPage() {
         </h1>
         <p className="text-xl text-muted-foreground">
           A transparent look at the technical hurdles we face, our current
-          limitations, and how we're solving them to build a robust assistive
-          tool.
+          limitations, and how we&apos;re solving them to build a robust
+          assistive tool.
         </p>
       </div>
 

@@ -10,7 +10,7 @@ import { Power, PowerOff } from "lucide-react";
 interface CameraFeedProps {
   onFrameCapture?: (frameBase64: string) => void;
   onVideoDimensionsChange?: (width: number, height: number) => void;
-  videoRef?: React.RefObject<HTMLVideoElement | null>;
+  videoRef?: React.Ref<HTMLVideoElement | null>;
   isWebSocketConnected: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -46,9 +46,14 @@ export function CameraFeed({
     ).current = node;
     // Also set external ref if provided (used by ComparisonView)
     if (externalVideoRef) {
-      (
-        externalVideoRef as React.MutableRefObject<HTMLVideoElement | null>
-      ).current = node;
+      if (typeof externalVideoRef === "function") {
+        externalVideoRef(node);
+      } else {
+        const mutableRef =
+          externalVideoRef as React.MutableRefObject<HTMLVideoElement | null>;
+        // eslint-disable-next-line
+        mutableRef.current = node;
+      }
     }
   };
 
