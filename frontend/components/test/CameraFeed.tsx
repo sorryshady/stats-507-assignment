@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCamera } from "@/hooks/useCamera";
 import { Button } from "@/components/ui/button";
-import { Power, PowerOff } from "lucide-react";
+import {
+  Power,
+  PowerOff,
+  Info,
+  AlertTriangle,
+  CheckCircle2,
+} from "lucide-react";
 
 interface CameraFeedProps {
   onFrameCapture?: (frameBase64: string) => void;
@@ -37,6 +43,21 @@ export function CameraFeed({
     stopCamera,
     captureFrame,
   } = useCamera();
+
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  const handleStartClick = () => {
+    setShowDisclaimer(true);
+  };
+
+  const handleConfirmStart = () => {
+    setShowDisclaimer(false);
+    startCamera();
+  };
+
+  const handleCancelStart = () => {
+    setShowDisclaimer(false);
+  };
 
   // Callback ref to set both internal and external refs
   const setVideoRef = (node: HTMLVideoElement | null) => {
@@ -180,7 +201,7 @@ export function CameraFeed({
         <div>
           {!isActive ? (
             <Button
-              onClick={startCamera}
+              onClick={handleStartClick}
               variant="default"
               size="sm"
               className="gap-2"
@@ -199,6 +220,71 @@ export function CameraFeed({
           )}
         </div>
       </div>
+
+      {showDisclaimer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-lg shadow-2xl border-border bg-card">
+            <div className="p-6 space-y-6">
+              <div className="flex items-center gap-3 text-amber-500">
+                <AlertTriangle className="w-8 h-8" />
+                <h3 className="text-lg font-semibold text-foreground">
+                  Camera Limitations & Testing Guide
+                </h3>
+              </div>
+
+              <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                <div className="bg-muted/50 p-3 rounded-lg border border-border/50">
+                  <p className="font-medium text-foreground mb-1 flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    Webcam Constraints
+                  </p>
+                  <p>
+                    Standard webcams have a{" "}
+                    <strong>narrow Field of View (FOV)</strong>. Fast movements
+                    close to the lens may cause tracking issues or ghosting.
+                    Distance estimation is approximate using a single camera.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="font-medium text-foreground">
+                    Recommended Testing:
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-500 shrink-0" />
+                      <span>
+                        Hold an object (phone, bottle) and move it{" "}
+                        <strong>slowly</strong>.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-500 shrink-0" />
+                      <span>
+                        Walk into the frame from a distance (2-3 meters).
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-500 shrink-0" />
+                      <span>Avoid rapid hand waving close to the camera.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={handleCancelStart}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmStart} className="gap-2">
+                  <Power className="w-4 h-4" />
+                  Understood, Start Feed
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </Card>
   );
 }
