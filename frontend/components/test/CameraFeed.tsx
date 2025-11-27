@@ -56,7 +56,8 @@ export function CameraFeed({
         if (!isActive || !isWebSocketConnected) return;
 
         if (internalVideoRef.current && internalVideoRef.current.readyState >= 2) {
-          // Capture and send frames at ~10 FPS (reduced for performance)
+          // Capture and send frames at ~5 FPS to allow backend processing time
+          // reducing latency-induced tracking loss
           frameIntervalRef.current = setInterval(() => {
             // Double check active state inside interval
             if (!isActive || !isWebSocketConnected) {
@@ -69,7 +70,7 @@ export function CameraFeed({
               onSendFrame(frame);
               onFrameCapture?.(frame);
             }
-          }, 100); // ~10 FPS - adjust as needed
+          }, 200); // ~5 FPS
         } else {
           // Retry after a short delay
           setTimeout(startFrameCapture, 200);

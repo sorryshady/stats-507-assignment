@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Shield, Zap, Brain, ArrowRight } from "lucide-react";
 
@@ -15,24 +21,28 @@ export default function HomePage() {
           <Badge variant="outline" className="mb-4">
             v0.1 Beta
           </Badge>
-          
+
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
             See Your World Through AI
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed">
-            Real-time object detection and narration powered by advanced machine learning. 
-            Navigate your environment with confidence.
+            Real-time object detection and narration powered by advanced machine
+            learning. Navigate your environment with confidence.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link href="/test">
-              <Button size="lg" className="text-lg px-8 py-6 h-auto">
+              <Button size="lg" className="text-lg px-8 py-4 h-auto">
                 Start Testing <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
             <Link href="/demo">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-4 h-auto"
+              >
                 Watch Demo
               </Button>
             </Link>
@@ -104,7 +114,11 @@ export default function HomePage() {
             Join the beta and help us shape the future of assistive technology.
           </p>
           <Link href="/test">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="text-lg px-8 py-4 h-auto"
+            >
               Launch Application
             </Button>
           </Link>
