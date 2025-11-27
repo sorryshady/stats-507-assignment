@@ -10,7 +10,7 @@ import { Power, PowerOff } from "lucide-react";
 interface CameraFeedProps {
   onFrameCapture?: (frameBase64: string) => void;
   onVideoDimensionsChange?: (width: number, height: number) => void;
-  videoRef?: React.RefObject<HTMLVideoElement>;
+  videoRef?: React.RefObject<HTMLVideoElement | null>;
   isWebSocketConnected: boolean;
   onConnect: () => void;
   onDisconnect: () => void;

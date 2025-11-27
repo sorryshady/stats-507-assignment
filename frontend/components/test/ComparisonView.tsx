@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Layers, Monitor } from "lucide-react";
 
 interface ComparisonViewProps {
-  originalVideoRef: React.RefObject<HTMLVideoElement>;
+  originalVideoRef: React.RefObject<HTMLVideoElement | null>;
   annotatedFrame?: string;
   detections: any[];
   hazards: any[];

@@ -49,12 +49,11 @@ export function useWebSocket() {
             lastFrameIdRef.current = detectionResponse.frame_id;
             
             // Always create a completely new object to ensure React detects the change
-            // Use timestamp to force React to see it as a new value
+            // Spreading and creating new arrays ensures React sees it as a new reference
             setDetections({
               ...detectionResponse,
               detections: [...detectionResponse.detections],
               hazards: [...detectionResponse.hazards],
-              _updateTime: Date.now(), // Force React to see as new object
             });
           } else if (data.type === "error") {
             console.error("Server error:", data.message);

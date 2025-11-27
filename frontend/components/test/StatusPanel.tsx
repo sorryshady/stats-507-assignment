@@ -58,13 +58,13 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
               <span className="text-sm font-medium">Backend Service</span>
               {status.initialized ? (
                 <div className="flex items-center text-green-600 text-sm font-medium">
-                    <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-                    Ready
+                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                  Ready
                 </div>
               ) : (
                 <div className="flex items-center text-destructive text-sm font-medium">
-                    <div className="w-2 h-2 rounded-full bg-destructive mr-2" />
-                    Not Ready
+                  <div className="w-2 h-2 rounded-full bg-destructive mr-2" />
+                  Not Ready
                 </div>
               )}
             </div>
@@ -74,8 +74,10 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
                 <span className="flex items-center gap-2 text-muted-foreground">
                   YOLO Model
                 </span>
-                <span className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.yolo === "loaded" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}>
-                    {status.models.yolo.toUpperCase()}
+                <span
+                  className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.yolo === "loaded" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}
+                >
+                  {status.models.yolo.toUpperCase()}
                 </span>
               </div>
 
@@ -83,8 +85,10 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
                 <span className="flex items-center gap-2 text-muted-foreground">
                   BLIP Model
                 </span>
-                 <span className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.blip === "loaded" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}>
-                    {status.models.blip.toUpperCase()}
+                <span
+                  className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.blip === "loaded" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}
+                >
+                  {status.models.blip.toUpperCase()}
                 </span>
               </div>
 
@@ -92,15 +96,19 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
                 <span className="flex items-center gap-2 text-muted-foreground">
                   Ollama
                 </span>
-                 <span className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.ollama === "available" ? "bg-muted text-foreground" : "bg-destructive/10 text-destructive"}`}>
-                    {status.models.ollama.toUpperCase()}
+                <span
+                  className={`text-xs font-mono px-2 py-0.5 rounded ${status.models.ollama === "available" ? "bg-muted text-foreground" : "bg-emerald-600/10 text-emerald-600"}`}
+                >
+                  {status.models.ollama.toUpperCase()}
                 </span>
               </div>
             </div>
 
             <div className="pt-3 border-t">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Hardware Acceleration</span>
+                <span className="text-muted-foreground">
+                  Hardware Acceleration
+                </span>
                 <Badge variant={status.gpu.available ? "outline" : "secondary"}>
                   {status.gpu.available ? status.gpu.type : "CPU Only"}
                 </Badge>
@@ -108,7 +116,9 @@ export function StatusPanel({ detectionCount = 0 }: StatusPanelProps) {
             </div>
           </div>
         ) : (
-          <div className="text-sm text-destructive text-center py-2">Service Unavailable</div>
+          <div className="text-sm text-destructive text-center py-2">
+            Service Unavailable
+          </div>
         )}
       </CardContent>
     </Card>

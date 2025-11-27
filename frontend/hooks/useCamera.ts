@@ -31,11 +31,11 @@ export function useCamera() {
       setIsActive(false);
       
       if (err instanceof DOMException) {
-        if (err.name === "NotAllowedError" || err.code === DOMException.NOT_ALLOWED_ERR) {
+        if (err.name === "NotAllowedError") {
           setError("Camera permission denied. Please allow camera access in your browser settings.");
-        } else if (err.name === "NotFoundError" || err.code === DOMException.NOT_FOUND_ERR) {
+        } else if (err.name === "NotFoundError") {
           setError("No camera found. Please connect a camera.");
-        } else if (err.name === "NotReadableError" || err.code === DOMException.NOT_READABLE_ERR) {
+        } else if (err.name === "NotReadableError") {
           setError("Camera is already in use by another application.");
         } else if (err.name === "OverconstrainedError") {
           setError("Camera doesn't support the requested constraints. Trying with default settings...");
