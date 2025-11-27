@@ -73,86 +73,25 @@ We have upgraded the stack to leverage the M4 Pro's neural engine and the iPhone
 
 ---
 
-## 4. ✅ Concrete Functionalities
-
-### Feature 1: The Proximity Warning (Safety)
-
-- **Status:** _Always Active (Background)_
-- **Trigger:** Automatic.
-- **Logic:**
-  1.  **Zone Check:** Is the object in the center 40% of the frame?
-  2.  **Expansion Check:** Did the bounding box width increase by >10% in the last 0.5 seconds? (Visual Looping effect).
-  3.  **Class Check:** Is it a vehicle, bike, or running person?
-- **Output:** Immediate high-priority audio interrupt (Beep or "STOP").
-- **Latency Target:** < 50ms.
-
-### Feature 2: The "Narrator" (Context)
-
-- **Status:** _On-Demand_
-- **Trigger:** User presses `SPACE` or Voice Command.
-- **Logic:**
-  1.  **Snapshot:** Freezes current state.
-  2.  **Trajectory Analysis:** specific logic determines if objects are "Approaching", "Leaving", or "Passing By".
-  3.  **Fusion:** Sends `[Scene Description]` + `[Object Movements]` to Llama 3.2.
-- **Output:** "You are standing on a sidewalk. A car is waiting at the light, and two people are walking past you on the right."
-- **Latency Target:** ~1.5 - 2.0 seconds.
-
-### Feature 3: Semantic Search (Find Object)
-
-- **Status:** _Mode Switch_
-- **Trigger:** "Find my keys."
-- **Logic:**
-  1.  Lowers detection threshold for the specific class (`keys`).
-  2.  Scans frame.
-- **Output:** Spatial guidance: "Keys detected, 10 o'clock, about 1 meter away."
-
----
-
-## 5. 💾 Data Structures (The Contract)
-
-To ensure modularity, our components communicate via these strict data definitions.
-
-### 1. The Tracked Object (Internal)
-
-Stored in the **90-frame History Buffer**.
-
-```python
-@dataclass
-class DetectionPoint:
-    frame_id: int
-    timestamp: float
-    box: Tuple[int, int, int, int]  # x1, y1, x2, y2
-    area: int                        # w * h (used for depth estimation)
-    center: Tuple[int, int]          # Center coordinates
-```
-
-### 2. The Prompt Payload (LLM Input)
-
-This is the exact JSON-like structure we generate for Llama 3.2.
-
-```text
-SYSTEM: You are a helpful assistant for a blind user. Be concise.
-
-USER:
-Context: "A living room with a couch and TV."
-Entities:
-- Person (ID: 4): Moving Left -> Right (Passing by).
-- Dog (ID: 7): Area grew 40% (Approaching rapidly).
-- Chair (ID: 2): Stationary.
-
-TASK: Summarize this in one natural sentence, prioritizing safety.
-```
-
----
-
-## 6. 📁 Project Structure
+## 4. 📁 Project Structure
 
 ```
 final/
 ├── README.md                 # This file
 ├── requirements.txt          # Python dependencies
+├── demo.ipynb                # Jupyter Notebook Demo (Core Pipeline)
 ├── run.py                    # CLI entry point
-├── yolo11n.pt               # YOLO model weights
+├── yolo11n.pt                # YOLO model weights
+│
+├── backend/                  # FastAPI Backend
+│   ├── app/
+│   ├── requirements.txt
+│   └── README.md
+│
+├── frontend/                 # Next.js Frontend
+│   ├── app/
+│   ├── components/
+│   └── README.md
 │
 ├── src/                      # Core ML codebase
 │   ├── main.py              # Dual-loop system orchestrator
@@ -162,28 +101,26 @@ final/
 │   ├── cognitive_loop/      # Scene narration (on-demand)
 │   └── utils/               # Data structures & threading
 │
+├── report/                   # Final Report
+│   └── final_report.pdf
+│
 ├── docs/                     # Documentation
 │   ├── README.md            # Documentation index
 │   ├── USAGE.md             # Usage guide
 │   ├── CONTROL_FLOW.md      # System architecture
 │   ├── logging.md           # Logging documentation
-│   ├── IMPLEMENTATION_TIMELINE.md  # Web app timeline
-│   ├── WEB_APP_PLAN.md      # Web app architecture
-│   └── project_guidelines/   # Course requirements
+│   └── WEB_APP_PLAN.md      # Web app architecture
 │
 ├── scripts/                  # Utility scripts
-│   ├── list_cameras.py      # List available cameras
-│   ├── verify_ollama.py     # Check Ollama setup
-│   └── verify_tts.py        # Test audio system
-│
 ├── tests/                    # Unit tests
-├── test_images/             # Test image dataset
-└── venv/                    # Virtual environment (gitignored)
+└── test_images/              # Test image dataset
 ```
 
-## 7. 🚀 Quick Start
+---
 
-### Installation
+## 5. 🚀 Quick Start
+
+### 1. Installation
 
 ```bash
 # Clone repository
@@ -197,42 +134,61 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Verify Ollama setup
+# Verify Ollama setup (required for Narration)
 python scripts/verify_ollama.py
 ```
 
-### Running the CLI Application
+### 2. Run the Jupyter Demo
+
+This demonstrates the core ML pipeline without web servers.
 
 ```bash
-# With camera (default)
-python run.py
-
-# Or use module syntax
-python -m src.main
-
-# Test mode with camera
-python -m src.main --test --use-camera
-
-# Test mode with video file
-python -m src.main --test --test-video path/to/video.mp4
+jupyter notebook demo.ipynb
 ```
 
-See [docs/USAGE.md](docs/USAGE.md) for detailed usage instructions.
+### 3. Run the Full Web Application
 
-## 8. 📚 Documentation
+**Backend:**
 
-- **[Usage Guide](docs/USAGE.md)** - How to run the application
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+**Frontend:**
+
+```bash
+# In a new terminal
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+### 4. Run the CLI Application (Legacy)
+
+```bash
+python run.py
+```
+
+---
+
+## 6. 📚 Documentation
+
+- **[Usage Guide](docs/USAGE.md)** - Detailed running instructions
 - **[System Architecture](docs/CONTROL_FLOW.md)** - Detailed control flow
 - **[Logging System](docs/logging.md)** - Logging documentation
-- **[Implementation Timeline](docs/IMPLEMENTATION_TIMELINE.md)** - Web app development plan
 - **[Web App Plan](docs/WEB_APP_PLAN.md)** - Full-stack architecture
 
-## 9. 🗓️ Current Status
+## 7. 🗓️ Current Status
 
-**Phase:** Web Application Development (Nov 25 - Dec 3, 2025)
+**Status:** ✅ Completed (Dec 3, 2025)
 
 - ✅ Core ML pipeline (YOLO, BLIP, Llama 3.2)
 - ✅ CLI application with dual-loop system
-- 🚧 Backend API (FastAPI) - In Progress
-- ⏳ Frontend (Next.js) - Planned
-- ⏳ Jupyter notebook demo - Planned
+- ✅ Backend API (FastAPI)
+- ✅ Frontend (Next.js)
+- ✅ Jupyter notebook demo
+- ✅ Final Report (in `report/`)
