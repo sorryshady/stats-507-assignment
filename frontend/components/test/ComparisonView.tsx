@@ -63,7 +63,10 @@ export function ComparisonView({
       } else if (comparisonVideo && comparisonVideo.srcObject) {
         // Cleanup if original stream is gone
         const stream = comparisonVideo.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
+        stream.getTracks().forEach((track) => {
+          track.stop();
+          track.enabled = false;
+        });
         comparisonVideo.srcObject = null;
         currentStreamIdRef.current = null;
       }

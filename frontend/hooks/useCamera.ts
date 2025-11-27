@@ -69,6 +69,8 @@ export function useCamera() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
         track.stop();
+        // Explicitly set enabled to false to ensure hardware light goes off
+        track.enabled = false;
       });
       streamRef.current = null;
     }
@@ -77,10 +79,12 @@ export function useCamera() {
     if (videoRef.current) {
       if (videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
+        stream.getTracks().forEach((track) => {
+          track.stop();
+          track.enabled = false;
+        });
       }
       videoRef.current.srcObject = null;
-      // videoRef.current.load(); // REMOVED: Avoid flickering
     }
     
     setIsActive(false);
