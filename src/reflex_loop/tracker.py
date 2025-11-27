@@ -64,11 +64,13 @@ class YOLOTracker:
         
         try:
             # Run tracking with confidence threshold
+            # Explicitly use ByteTrack for robust tracking (handling occlusions better)
             results = self.model.track(
                 frame, 
                 persist=True, 
                 verbose=False, 
-                conf=YOLO_CONFIDENCE_THRESHOLD
+                conf=YOLO_CONFIDENCE_THRESHOLD,
+                tracker="bytetrack.yaml"
             )
             
             detections = []

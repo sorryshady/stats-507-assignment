@@ -75,8 +75,12 @@ export function useCamera() {
     
     // Clear video element
     if (videoRef.current) {
+      if (videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
+      }
       videoRef.current.srcObject = null;
-      videoRef.current.pause();
+      // videoRef.current.load(); // REMOVED: Avoid flickering
     }
     
     setIsActive(false);
@@ -164,7 +168,7 @@ export function useCamera() {
         const stream = video.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
-        video.pause();
+        // video.load(); // REMOVED: Force reset causes flickering if re-render happens too fast
       }
     }
   }, [isActive]); // Re-run when isActive changes

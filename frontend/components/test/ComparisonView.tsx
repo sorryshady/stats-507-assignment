@@ -20,6 +20,7 @@ export function ComparisonView({
   detections,
 }: ComparisonViewProps) {
   const comparisonVideoRef = useRef<HTMLVideoElement>(null);
+  const currentStreamIdRef = useRef<string | null>(null);
 
   // Generate stable key and image source without using Date.now() in render
   const { imageSrc, imageKey } = useMemo(() => {
@@ -48,14 +49,15 @@ export function ComparisonView({
       if (originalVideo && comparisonVideo && originalVideo.srcObject) {
         const stream = originalVideo.srcObject as MediaStream;
 
-        // Check if we already have this stream assigned
-        if (comparisonVideo.srcObject !== stream) {
+        // Check if we already have this stream assigned (by ID) to avoid unnecessary cloning/reassigning
+        if (currentStreamIdRef.current !== stream.id) {
           // Clone the stream tracks
           const clonedStream = new MediaStream();
           stream.getVideoTracks().forEach((track) => {
             clonedStream.addTrack(track.clone());
           });
           comparisonVideo.srcObject = clonedStream;
+          currentStreamIdRef.current = stream.id;
           comparisonVideo.play().catch(console.error);
         }
       } else if (comparisonVideo && comparisonVideo.srcObject) {
@@ -63,6 +65,7 @@ export function ComparisonView({
         const stream = comparisonVideo.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
         comparisonVideo.srcObject = null;
+        currentStreamIdRef.current = null;
       }
     };
 

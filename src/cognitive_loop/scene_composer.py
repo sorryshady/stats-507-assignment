@@ -79,8 +79,14 @@ class SceneComposer:
 
             with torch.no_grad():
                 # Use lower temperature-like behavior with do_sample=False for more deterministic output
+                # Add repetition penalty to prevent "self self self" loops
                 out = self.model.generate(
-                    **inputs, max_length=50, num_beams=3, do_sample=False
+                    **inputs, 
+                    max_length=50, 
+                    num_beams=3, 
+                    do_sample=False,
+                    repetition_penalty=1.5,
+                    no_repeat_ngram_size=2
                 )
 
             caption = self.processor.decode(out[0], skip_special_tokens=True)
