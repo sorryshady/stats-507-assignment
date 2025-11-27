@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
   { href: "/challenges", label: "Challenges" },
   { href: "/roadmap", label: "Roadmap" },
   { href: "/demo", label: "Demo" },
