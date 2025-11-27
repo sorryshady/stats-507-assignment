@@ -49,13 +49,13 @@ export function ComparisonView({
 
       if (originalVideo && originalVideo.srcObject) {
         const stream = originalVideo.srcObject as MediaStream;
-        
+
         // If we have a comparison video element but it doesn't have a stream yet,
         // or if the stream ID has changed
         if (comparisonVideo && currentStreamIdRef.current !== stream.id) {
           // Cleanup previous cloned stream if exists
           if (clonedStreamRef.current) {
-            clonedStreamRef.current.getTracks().forEach(track => {
+            clonedStreamRef.current.getTracks().forEach((track) => {
               track.stop();
               track.enabled = false;
             });
@@ -66,7 +66,7 @@ export function ComparisonView({
           stream.getVideoTracks().forEach((track) => {
             clonedStream.addTrack(track.clone());
           });
-          
+
           clonedStreamRef.current = clonedStream;
           comparisonVideo.srcObject = clonedStream;
           currentStreamIdRef.current = stream.id;
@@ -81,7 +81,7 @@ export function ComparisonView({
           });
           clonedStreamRef.current = null;
         }
-        
+
         if (comparisonVideo) {
           comparisonVideo.srcObject = null;
         }
