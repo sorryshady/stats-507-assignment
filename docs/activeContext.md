@@ -2,6 +2,7 @@
 
 ## Current Focus
 
+- **Fixing Narration Hallucinations**: Addressed an issue where stale tracking history caused the LLM to narrate objects that were no longer present (e.g., "cell phone leaving").
 - Tuning the narration and trajectory analysis to reduce hallucinations and false positives.
 - Improved `trajectory.py` thresholds to prevent "rapidly approaching" false alarms for stationary users.
 - Updated `narrator.py` prompt to help the LLM resolve entity duplication (understanding that "person" entity = "man" in scene).
@@ -10,30 +11,24 @@
 
 ## Recent Changes
 
-- **Frontend**:
-  - `frontend/components/test/CameraFeed.tsx`: Added a "Camera Limitations & Testing Guide" modal that appears before starting the camera feed. This informs users about webcam FOV constraints and provides best practices for testing.
-  - `frontend/components/test/ComparisonView.tsx`: Fixed flickering issue in the "Raw Input" view by tracking the stream ID to prevent unnecessary re-cloning of the media stream.
-  - `frontend/hooks/useCamera.ts`: 
-    - Fixed camera resource leak by explicitly stopping media tracks.
-    - Removed `video.load()` calls which were causing flickering in the raw input feed.
-  - `frontend/app/challenges/page.tsx`: 
-    - Updated "Monocular Depth & Motion" challenge to explain the mitigation strategy (limiting tracking to significant movements).
-    - Added "Stream Freeze on Generation" challenge to document the latency/blocking issue when triggering manual generation.
-  - Complete redesign of `frontend/app/challenges/page.tsx` with a comprehensive list of technical challenges.
-  - Minimalist refactor of `frontend/app/page.tsx`, `frontend/app/test/page.tsx`, and associated components (`CameraFeed`, `ComparisonView`, etc.).
-  - Global style updates (`globals.css`) for a monochrome, high-contrast look.
-  - Added "Challenges" to the navigation.
-
 - **Backend**:
-  - `src/reflex_loop/tracker.py`: Explicitly configured YOLO to use `tracker="bytetrack.yaml"` to ensure robust multi-object tracking (validating the "Solved" status in Challenges).
-  - `src/cognitive_loop/scene_composer.py`: Added `repetition_penalty=1.5` and `no_repeat_ngram_size=2` to BLIP generation to prevent infinite repetition loops (e.g., "self self self").
-  - `src/cognitive_loop/trajectory.py`: Further increased movement thresholds (velocity 5.0, area 25.0) and "rapidly approaching" threshold (60%) to filter false positives from hand movements (e.g., waving).
-  - `src/cognitive_loop/scene_composer.py`: Added regex-based sanitization to replace "mirror" hallucinations with "camera" references.
-  - `src/cognitive_loop/narrator.py`: Updated system prompt to explicitly instruct the LLM to treat "mirror" descriptions as hallucinations when appropriate.
+
+  - `backend/app/core/system.py`:
+    - Added `cleanup_stale_objects(frame_id)` to `process_frame` (runs every 30 frames) to ensure `HistoryBuffer` doesn't retain old objects indefinitely during real-time tracking.
+    - Added timestamp-based filtering to `generate_narration`. Now, only objects detected within the last 2 seconds are passed to the trajectory analyzer and LLM. This prevents "ghost" objects from previous sessions being described.
+  - `src/reflex_loop/tracker.py`: Explicitly configured YOLO to use `tracker="bytetrack.yaml"` to ensure robust multi-object tracking.
+  - `src/cognitive_loop/scene_composer.py`: Added `repetition_penalty=1.5` and `no_repeat_ngram_size=2` to BLIP generation.
+  - `src/cognitive_loop/trajectory.py`: Increased movement thresholds to filter hand movements.
+  - `src/cognitive_loop/narrator.py`: Updated system prompt to handle "mirror" hallucinations.
+
+- **Frontend**:
+  - `frontend/components/test/CameraFeed.tsx`: Added "Camera Limitations & Testing Guide" modal.
+  - `frontend/components/test/ComparisonView.tsx`: Fixed flickering.
+  - `frontend/hooks/useCamera.ts`: Fixed resource leaks.
+  - `frontend/app/challenges/page.tsx`: Updated with technical challenges.
 
 ## Next Steps
 
-- Validate the changes with the user.
+- Validate the "stale history" fix with the user (verify if "cell phone leaving" persists).
 - Monitor for any new edge cases in narration.
-- Investigate the "Stream Freeze" issue (likely synchronous blocking in backend inference or WebSocket loop).
-- Consider implementing "Long-term Memory" or "Privacy" features mentioned in the challenges if the project scope expands.
+- Investigate the "Stream Freeze" issue.

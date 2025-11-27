@@ -127,6 +127,10 @@ class SystemManager:
             )
             self.history_buffer.add_detection(object_id, detection)
 
+        # Cleanup stale objects periodically (every 30 frames)
+        if frame_id % 30 == 0:
+            self.history_buffer.cleanup_stale_objects(frame_id)
+
         # Check for hazards
         hazards = self.safety_monitor.check_hazards(detections, self.history_buffer)
 
@@ -188,7 +192,17 @@ class SystemManager:
 
         # Analyze trajectories
         tracked_objects = self.history_buffer.get_all_objects()
-        object_movements = self.trajectory_analyzer.analyze_all_objects(tracked_objects)
+        
+        # Filter out stale objects (older than 2 seconds) to prevent describing past events
+        current_time = time.time()
+        active_objects = {}
+        for obj_id, obj in tracked_objects.items():
+            latest = obj.get_latest()
+            # Check if object has a latest detection and if it's recent (< 2 seconds old)
+            if latest and (current_time - latest.timestamp < 2.0):
+                active_objects[obj_id] = obj
+                
+        object_movements = self.trajectory_analyzer.analyze_all_objects(active_objects)
 
         # Generate narration
         narration = self.narrator.generate_narration_from_components(
