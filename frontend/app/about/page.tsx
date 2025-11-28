@@ -320,12 +320,12 @@ export default function AboutPage() {
           </div>
 
           <Tabs defaultValue="commercial" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto">
               <TabsTrigger value="commercial">Commercial Solutions</TabsTrigger>
               <TabsTrigger value="technical">Core Technology</TabsTrigger>
               <TabsTrigger value="research">Related Research</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="commercial" className="mt-4">
               <Card>
                 <CardHeader>
@@ -391,15 +391,13 @@ export default function AboutPage() {
                           className="block p-4 bg-muted/30 rounded-lg relative group hover:bg-muted/50 transition-colors cursor-pointer"
                         >
                           <div className="flex justify-between items-start">
-                            <div className="font-semibold">
-                              {ref.title}
-                            </div>
+                            <div className="font-semibold">{ref.title}</div>
                             <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                           </div>
                           <div className="text-sm text-muted-foreground mt-2 space-y-1">
-                             {ref.talking_points.map((point, idx) => (
-                                <p key={idx}>• {point}</p>
-                             ))}
+                            {ref.talking_points.map((point, idx) => (
+                              <p key={idx}>• {point}</p>
+                            ))}
                           </div>
                         </a>
                       </li>
@@ -438,7 +436,7 @@ export default function AboutPage() {
                           </div>
                           <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 mt-2">
+                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 mt-2">
                           {ref.talking_points.map((point, idx) => (
                             <li key={idx}>{point}</li>
                           ))}
