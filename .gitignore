@@ -59,6 +59,8 @@ datasets/
 *.avi
 *.mov
 !test_images/
+!frontend/public/about/
+!frontend/public/about/**
 
 # Logs
 *.log
