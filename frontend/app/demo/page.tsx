@@ -21,28 +21,6 @@ export default function DemoPage() {
           </p>
         </div>
 
-        {/* Deployment / Testing Notice */}
-        <Alert
-          variant="warning"
-          className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-        >
-          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-          <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold mb-2">
-            Local Setup Required
-          </AlertTitle>
-          <AlertDescription className="text-amber-700 dark:text-amber-400/90 space-y-2">
-            <p>
-              This project requires a powerful backend (running YOLO11 + Llama
-              3.2) to process real-time video feeds. Due to computational requirements,
-              the interactive demo is only available when running the application locally.
-            </p>
-            <p className="font-medium">
-              To try the interactive demo, please clone the repository and follow
-              the setup instructions below.
-            </p>
-          </AlertDescription>
-        </Alert>
-
         <Card>
           <CardHeader>
             <CardTitle>Interactive Demo</CardTitle>
@@ -56,10 +34,15 @@ export default function DemoPage() {
               yourself! The interactive test page allows you to see real-time object
               detection, tracking, and AI narration powered by your camera feed.
             </p>
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Local Setup Required</AlertTitle>
-              <AlertDescription>
+            <Alert
+              variant="warning"
+              className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+            >
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold">
+                Local Setup Required
+              </AlertTitle>
+              <AlertDescription className="text-amber-700 dark:text-amber-400/90">
                 Due to the computational requirements of real-time AI processing,
                 the interactive test page is only available when running the application
                 locally. Clone the repository and follow the setup instructions to try it yourself.
