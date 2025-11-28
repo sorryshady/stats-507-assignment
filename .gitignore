@@ -12,14 +12,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-# backend-specific libraries
-# Keep backend Python virtual env libs out of version control,
-# but allow the frontend/lib directory so Next.js utility helpers remain tracked.
-!/frontend/lib/
-!/frontend/lib/**
-
-lib/
-lib64/
+# backend-specific libraries (root-level virtualenv artifacts)
+/lib/
+/lib64/
 parts/
 sdist/
 var/
