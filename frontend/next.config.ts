@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
     config.resolve.alias["@"] = path.resolve(__dirname);
     return config;
   },
+  turbopack: {
+    resolveAlias: {
+      "@": path.resolve(__dirname),
+    },
+  },
 };
 
 export default nextConfig;
