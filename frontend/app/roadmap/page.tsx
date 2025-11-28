@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 
@@ -29,7 +35,7 @@ export default function RoadmapPage() {
       ],
     },
     {
-      status: "in-progress",
+      status: "completed",
       title: "Phase 3: Polish & Optimization",
       description: "Performance improvements and UI enhancements",
       items: [
@@ -97,15 +103,15 @@ export default function RoadmapPage() {
                       phase.status === "completed"
                         ? "default"
                         : phase.status === "in-progress"
-                        ? "secondary"
-                        : "outline"
+                          ? "secondary"
+                          : "outline"
                     }
                   >
                     {phase.status === "completed"
                       ? "Completed"
                       : phase.status === "in-progress"
-                      ? "In Progress"
-                      : "Planned"}
+                        ? "In Progress"
+                        : "Planned"}
                   </Badge>
                 </div>
                 <CardDescription>{phase.description}</CardDescription>
@@ -113,7 +119,10 @@ export default function RoadmapPage() {
               <CardContent>
                 <ul className="space-y-2">
                   {phase.items.map((item, itemIdx) => (
-                    <li key={itemIdx} className="flex items-start gap-2 text-sm">
+                    <li
+                      key={itemIdx}
+                      className="flex items-start gap-2 text-sm"
+                    >
                       <span className="text-muted-foreground">•</span>
                       <span className="text-muted-foreground">{item}</span>
                     </li>
@@ -130,8 +139,9 @@ export default function RoadmapPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              This roadmap is subject to change based on user feedback and technical requirements.
-              If you have suggestions or feature requests, please reach out!
+              This roadmap is subject to change based on user feedback and
+              technical requirements. If you have suggestions or feature
+              requests, please reach out!
             </p>
           </CardContent>
         </Card>
@@ -139,4 +149,3 @@ export default function RoadmapPage() {
     </div>
   );
 }
-
