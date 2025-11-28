@@ -74,10 +74,20 @@ export default function TestPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge
-            variant={isConnected ? "default" : "destructive"}
+            variant={
+              isConnected
+                ? "default"
+                : isCameraActive
+                  ? "destructive"
+                  : "secondary"
+            }
             className="h-6"
           >
-            {isConnected ? "System Online" : "Disconnected"}
+            {isConnected
+              ? "System Online"
+              : isCameraActive
+                ? "Connection Failed"
+                : "Standby"}
           </Badge>
         </div>
       </div>

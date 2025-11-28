@@ -50,11 +50,8 @@ export function CameraFeed({
 
   useEffect(() => {
     // Notify parent component about camera active state changes
-    if (typeof onVideoDimensionsChange === 'function' && videoRef?.current) { // using onVideoDimensionsChange as a generic state callback hack if needed or better add a new prop
-       // Actually, let's look at the Props. There is no explicit "onCameraStateChange".
-       // We should add one or use an existing hook.
-    }
-  }, [isActive]);
+    onCameraStateChange?.(isActive);
+  }, [isActive, onCameraStateChange]);
   
   const handleStartClick = () => {
     setShowDisclaimer(true);
