@@ -236,13 +236,16 @@ export function CameraFeed({
                 <div className="bg-muted/50 p-3 rounded-lg border border-border/50">
                   <p className="font-medium text-foreground mb-1 flex items-center gap-2">
                     <Info className="w-4 h-4" />
-                    Webcam Constraints
+                    System Limitations
                   </p>
                   <p>
-                    Standard webcams have a{" "}
-                    <strong>narrow Field of View (FOV)</strong>. Fast movements
-                    close to the lens may cause tracking issues or ghosting.
-                    Distance estimation is approximate using a single camera.
+                    <strong>Webcam:</strong> Standard webcams have a narrow FOV and limited depth perception. Fast movements may cause ghosting.
+                  </p>
+                  <p className="mt-2">
+                    <strong>Audio:</strong> Narration uses your browser&apos;s built-in text-to-speech engine. Voice quality varies by device/browser.
+                  </p>
+                  <p className="mt-2">
+                    <strong>Performance:</strong> Running AI vision models in real-time requires significant processing power. You may experience latency.
                   </p>
                 </div>
 

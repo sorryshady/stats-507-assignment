@@ -99,7 +99,7 @@ export default function TestPage() {
                 <li>Observe real-time object detection and hazard alerts.</li>
                 <li>
                   Use &quot;Generate Narration&quot; to test AI scene
-                  understanding.
+                  understanding and text-to-speech.
                 </li>
               </ol>
             </CardContent>
