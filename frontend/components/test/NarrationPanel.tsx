@@ -285,69 +285,6 @@ export const NarrationPanel = forwardRef<NarrationPanelRef>((props, ref) => {
     </Card>
   );
 });
-      <CardContent className="space-y-4">
-        {isLoading && (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        )}
-
-        {error && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm">
-            {error}
-          </div>
-        )}
-
-        {narration && (
-          <div className="space-y-4">
-            <div className="p-3 bg-muted/50 rounded-md border border-border/50 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Narrative</p>
-                {isSpeaking ? (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    onClick={stopSpeaking}
-                    title="Stop speaking"
-                  >
-                    <Square className="w-3.5 h-3.5 fill-current" />
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0 hover:bg-primary/10 hover:text-primary"
-                    onClick={() => speakNarration(narration)}
-                    title="Read aloud"
-                  >
-                    <Volume2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-sm leading-relaxed">{narration}</p>
-            </div>
-            
-            {sceneDescription && (
-              <div className="p-3 bg-muted/30 rounded-md border border-border/50">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Technical Context</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{sceneDescription}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {!narration && !isLoading && (
-          <div className="text-center py-6 text-muted-foreground text-sm">
-            Ready to analyze scene.
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-});
 
 NarrationPanel.displayName = "NarrationPanel";
 
