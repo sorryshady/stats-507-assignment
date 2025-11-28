@@ -199,7 +199,6 @@ python run.py
 
 - **[Usage Guide](docs/USAGE.md)** - Detailed running instructions
 - **[System Architecture](docs/CONTROL_FLOW.md)** - Detailed control flow
-- **[Logging System](docs/logging.md)** - Logging documentation
 - **[Web App Plan](docs/WEB_APP_PLAN.md)** - Full-stack architecture
 
 ## 7. Current Status
