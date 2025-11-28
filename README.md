@@ -78,41 +78,61 @@ We have upgraded the stack to leverage the M4 Pro's neural engine and the iPhone
 ```
 final/
 ├── README.md                 # This file
-├── requirements.txt          # Python dependencies
+├── DEPLOYMENT.md             # Deployment guide (Local + Vercel)
+├── requirements.txt          # Root Python dependencies
 ├── demo.ipynb                # Jupyter Notebook Demo (Core Pipeline)
-├── run.py                    # CLI entry point
+├── run.py                    # Legacy CLI entry point
 ├── yolo11n.pt                # YOLO model weights
 │
 ├── backend/                  # FastAPI Backend
 │   ├── app/
+│   │   ├── api/              # API Routes & Models
+│   │   ├── core/             # Core Logic
+│   │   ├── middleware/       # CORS & Middleware
+│   │   └── main.py           # App Entry Point
+│   ├── tests/                # Backend Tests
 │   ├── requirements.txt
 │   └── README.md
 │
 ├── frontend/                 # Next.js Frontend
-│   ├── app/
-│   ├── components/
+│   ├── app/                  # Next.js App Router Pages
+│   ├── components/           # React Components
+│   ├── hooks/                # Custom React Hooks
+│   ├── lib/                  # Utilities & Types
+│   ├── public/               # Static Assets
 │   └── README.md
 │
-├── src/                      # Core ML codebase
-│   ├── main.py              # Dual-loop system orchestrator
-│   ├── config.py            # Configuration constants
-│   ├── hardware/            # Camera & audio handlers
-│   ├── reflex_loop/         # Safety monitoring (30 FPS)
-│   ├── cognitive_loop/      # Scene narration (on-demand)
-│   └── utils/               # Data structures & threading
+├── src/                      # Core ML codebase (Shared Logic)
+│   ├── main.py               # Dual-loop system orchestrator
+│   ├── config.py             # Configuration constants
+│   ├── hardware/             # Camera & audio handlers
+│   ├── reflex_loop/          # Safety monitoring (30 FPS)
+│   ├── cognitive_loop/       # Scene narration (on-demand)
+│   └── utils/                # Data structures & threading
 │
 ├── report/                   # Final Report
-│   └── final_report.pdf
+│   └── README.md             # Report placeholder/link
 │
 ├── docs/                     # Documentation
-│   ├── README.md            # Documentation index
-│   ├── USAGE.md             # Usage guide
-│   ├── CONTROL_FLOW.md      # System architecture
-│   ├── logging.md           # Logging documentation
-│   └── WEB_APP_PLAN.md      # Web app architecture
+│   ├── README.md             # Documentation index
+│   ├── USAGE.md              # Detailed usage guide
+│   ├── CONTROL_FLOW.md       # System architecture diagrams
+│   ├── logging.md            # Logging strategy
+│   ├── WEB_APP_PLAN.md       # Web app architecture plan
+│   ├── CHALLENGES_AND_LIMITATIONS.md
+│   ├── WEARABLE_ARCHITECTURE.md
+│   └── future_expansion_plan.md
 │
 ├── scripts/                  # Utility scripts
-├── tests/                    # Unit tests
+│   ├── verify_ollama.py
+│   ├── verify_tts.py
+│   └── list_cameras.py
+│
+├── tests/                    # Core System Unit Tests
+│   ├── test_physics.py
+│   ├── test_safety.py
+│   └── test_trajectory.py
+│
 └── test_images/              # Test image dataset
 ```
 
@@ -124,7 +144,7 @@ final/
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/sorryshady/stats-507-assignment.git
 cd final
 
 # Create virtual environment
