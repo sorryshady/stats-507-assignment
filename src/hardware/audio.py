@@ -20,11 +20,11 @@ class SpeechPriority(IntEnum):
     HIGH = 2  # Hazard warnings
 
 
-@dataclass
+@dataclass(order=True)
 class SpeechRequest:
     """Represents a speech request in the queue."""
+    priority: int
     text: str
-    priority: SpeechPriority
     timestamp: float
 
 
@@ -234,8 +234,7 @@ class AudioHandler:
                 try:
                     # Get next speech request (blocks until available)
                     # PriorityQueue returns lowest priority value first
-                    # Format: (priority_value, request)
-                    priority_value, request = self.speech_queue.get(timeout=1.0)
+                    request = self.speech_queue.get(timeout=1.0)
                     
                     # Wait for beep to finish if it's playing (beeps are prioritized)
                     if self.beep_playing:
@@ -247,7 +246,9 @@ class AudioHandler:
                             wait_time += 0.05
                     
                     # Process the speech request
-                    logger.info(f"Processing speech request (priority={request.priority.name}): {request.text[:50]}...")
+                    # Determine priority name for logging
+                    priority_name = "HIGH" if request.priority < -1 else "LOW"
+                    logger.info(f"Processing speech request (priority={priority_name}): {request.text[:50]}...")
                     self._process_speech(request.text)
                     
                     # Mark task as done
@@ -282,25 +283,29 @@ class AudioHandler:
         priority_level = SpeechPriority.HIGH if priority else SpeechPriority.LOW
         
         # Create speech request
+        # We invert priority so HIGH priority gets lower queue number for priority queue sorting
+        queue_priority = -priority_level.value
+        
         request = SpeechRequest(
+            priority=queue_priority,
             text=text,
-            priority=priority_level,
             timestamp=time.time()
         )
         
-        # Add to queue (lower number = higher priority, so HIGH=2 comes before LOW=1)
-        # We invert priority so HIGH priority gets lower queue number
-        queue_priority = -priority_level.value
-        
         try:
-            self.speech_queue.put((queue_priority, request), block=False)
+            # We just put the request itself, as it's now orderable due to @dataclass(order=True)
+            # and priority is the first field
+            self.speech_queue.put(request, block=False)
             logger.debug(f"Queued speech request (priority={priority_level.name}): {text[:50]}...")
         except queue.Full:
             logger.warning("Speech queue is full, dropping request")
     
     def _process_speech(self, text: str):
         """Process a single speech request using available TTS engine."""
-        if self.tts_engine is not None:
+        # On macOS, pyttsx3 is unstable in background threads. Prefer system 'say'.
+        if sys.platform == "darwin":
+            self._speak_system(text)
+        elif self.tts_engine is not None:
             self._speak_pyttsx3(text)
         else:
             self._speak_system(text)

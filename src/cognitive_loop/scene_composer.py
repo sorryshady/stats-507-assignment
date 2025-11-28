@@ -138,6 +138,15 @@ class SceneComposer:
                  caption = caption.replace("mirror", "camera")
             # Update caption_lower for subsequent checks
             caption_lower = caption.lower()
+            
+        # Fix bathroom/room hallucination - BLIP often sees white tiles/walls as bathroom
+        if "bathroom" in caption_lower:
+            logger.info(f"Correcting 'bathroom' hallucination in caption: {caption}")
+            caption = re.sub(r"in a bathroom", "in a room", caption, flags=re.IGNORECASE)
+            caption = re.sub(r"in the bathroom", "in the room", caption, flags=re.IGNORECASE)
+            # General fallback
+            caption = caption.replace("bathroom", "room")
+            caption_lower = caption.lower()
 
         # Check if caption contains inappropriate content
         for pattern in inappropriate_patterns:

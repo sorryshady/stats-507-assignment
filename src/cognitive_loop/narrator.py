@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 class LLMNarrator:
     """Generates narration using Llama 3.2 via Ollama."""
-    
+
     def __init__(self, api_url: str = OLLAMA_API_URL, model: str = OLLAMA_MODEL):
         """
         Initialize LLM narrator.
-        
+
         Args:
             api_url: Ollama API URL
             model: Model name (e.g., "llama3.2:3b")
@@ -24,24 +24,28 @@ class LLMNarrator:
         self.api_url = api_url
         self.model = model
         self.api_endpoint = f"{api_url}/api/generate"
-    
-    def compose_prompt(self, scene_description: str, object_movements: List[str]) -> str:
+
+    def compose_prompt(
+        self, scene_description: str, object_movements: List[str]
+    ) -> str:
         """
         Compose prompt for LLM.
-        
+
         Args:
             scene_description: Scene description from BLIP
             object_movements: List of movement description strings
-        
+
         Returns:
             Formatted prompt string
         """
         # Format object movements
         if object_movements:
-            entities_text = "\n".join([f"- {movement}" for movement in object_movements])
+            entities_text = "\n".join(
+                [f"- {movement}" for movement in object_movements]
+            )
         else:
             entities_text = "- No objects detected."
-        
+
         prompt = f"""SYSTEM: You are a helpful assistant for a blind user. Be concise and direct. Only describe what is certainly present. Do not ask questions.
 If the context mentions a "mirror" or "reflection" and it seems to be describing the user themselves (e.g., "standing in front of a mirror"), assume it is a hallucination caused by the camera feed and describe it as the person being present or facing the camera.
 
@@ -52,21 +56,22 @@ Entities (detected movement):
 
 TASK: Synthesize the context and entities into one natural sentence.
 IMPORTANT RULES:
-1. The entities likely correspond to the subjects in the context (e.g., a "person" entity is likely the same as "a man" or "a woman" in the context). Do not treat them as separate people unless clearly distinct.
-2. If the context mentions a person holding an object (e.g., "holding a phone", "with a remote"), and that object also appears in the entities list with movement, DO NOT describe the object as moving independently. The object is being held and moves with the person. Simply mention the person is holding it.
-3. Small handheld objects (cell phone, remote, cup, etc.) moving in the same direction as a person are almost certainly held items, not independent threats.
-4. Prioritize safety information about truly independent moving objects (vehicles, other people, animals)."""
-        
+1. MERGE SUBJECTS: The "Entities" list (e.g., "person") usually refers to the SAME subject mentioned in the "Context" (e.g., "man", "woman"). Assume they are the SAME person unless the context explicitly describes multiple distinct people (e.g., "two men", "a crowd").
+2. If the context mentions a person holding an object, and that object also appears in the entities list, DO NOT describe the object as moving independently. It moves with the person.
+3. Small handheld objects moving in the same direction as a person are almost certainly held items, not independent threats.
+4. Prioritize safety information about truly independent moving objects (vehicles, other people, animals).
+5. Ignore any coordinates or bounding box numbers (e.g., "box (100, 200, ...)") mentioned in the entities list. They are technical data. If an entity is described as "at box", simply treat it as "present" or "in front of you". Do NOT say "at a box", "near a box", or "at the location"."""
+
         return prompt
-    
+
     def generate_narration(self, prompt: str, timeout: float = 10.0) -> Optional[str]:
         """
         Generate narration from prompt using Ollama.
-        
+
         Args:
             prompt: Input prompt
             timeout: Request timeout in seconds
-        
+
         Returns:
             Generated narration string or None if error
         """
@@ -81,27 +86,25 @@ IMPORTANT RULES:
                     "num_predict": 100,  # Limit response length
                     # Note: Ollama automatically uses Metal GPU on Mac when available
                     # GPU acceleration is handled by Ollama server, not via API
-                }
+                },
             }
-            
-            response = requests.post(
-                self.api_endpoint,
-                json=payload,
-                timeout=timeout
-            )
-            
+
+            response = requests.post(self.api_endpoint, json=payload, timeout=timeout)
+
             if response.status_code == 200:
                 result = response.json()
                 narration = result.get("response", "").strip()
-                
+
                 # Clean up narration: remove follow-up questions and extra verbosity
                 narration = self._clean_narration(narration)
-                
+
                 return narration
             else:
-                logger.error(f"Ollama API error: {response.status_code} - {response.text}")
+                logger.error(
+                    f"Ollama API error: {response.status_code} - {response.text}"
+                )
                 return None
-        
+
         except requests.exceptions.Timeout:
             logger.error(f"Ollama API timeout after {timeout}s")
             return None
@@ -111,11 +114,11 @@ IMPORTANT RULES:
         except Exception as e:
             logger.error(f"Error generating narration: {e}")
             return None
-    
+
     def check_connection(self) -> bool:
         """
         Check if Ollama is available.
-        
+
         Returns:
             True if connection successful
         """
@@ -124,14 +127,14 @@ IMPORTANT RULES:
             return response.status_code == 200
         except Exception:
             return False
-    
+
     def _clean_narration(self, narration: str) -> str:
         """
         Clean narration to remove follow-up questions and extra verbosity.
-        
+
         Args:
             narration: Raw narration from LLM
-        
+
         Returns:
             Cleaned narration string
         """
@@ -144,37 +147,41 @@ IMPORTANT RULES:
             r"I can help.*",
             r"Please let me know.*",
         ]
-        
+
         import re
+
         cleaned = narration
         for pattern in patterns_to_remove:
             cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE | re.DOTALL)
-        
+
         # Remove multiple consecutive periods/spaces
         cleaned = re.sub(r"\.{2,}", ".", cleaned)
         cleaned = re.sub(r"\s+", " ", cleaned)
         cleaned = cleaned.strip()
-        
+
         # If narration ends with a question mark, try to convert to statement
         if cleaned.endswith("?"):
             # Remove question marks at the end if it's asking for follow-up
-            if any(phrase in cleaned.lower() for phrase in ["anything else", "need help", "assist", "let me know"]):
+            if any(
+                phrase in cleaned.lower()
+                for phrase in ["anything else", "need help", "assist", "let me know"]
+            ):
                 cleaned = cleaned.rstrip("?").rstrip() + "."
-        
+
         return cleaned
-    
-    def generate_narration_from_components(self, scene_description: str, 
-                                           object_movements: List[str]) -> Optional[str]:
+
+    def generate_narration_from_components(
+        self, scene_description: str, object_movements: List[str]
+    ) -> Optional[str]:
         """
         Generate narration from scene and movement components.
-        
+
         Args:
             scene_description: Scene description from BLIP
             object_movements: List of movement description strings
-        
+
         Returns:
             Generated narration string or None if error
         """
         prompt = self.compose_prompt(scene_description, object_movements)
         return self.generate_narration(prompt)
-
