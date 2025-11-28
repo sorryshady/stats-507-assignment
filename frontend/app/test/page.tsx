@@ -14,12 +14,14 @@ import { DebugPanel } from "@/components/test/DebugPanel";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ListChecks } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ListChecks, AlertTriangle } from "lucide-react";
 
 export default function TestPage() {
   const { detections, isConnected, error, connect, disconnect, sendFrame } =
     useWebSocket();
   const [currentFrame, setCurrentFrame] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const narrationPanelRef = useRef<NarrationPanelRef>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -28,8 +30,15 @@ export default function TestPage() {
     console.log("WebSocket connection status changed:", isConnected);
   }, [isConnected]);
 
+  // Only show disconnected alert if camera is active AND socket is disconnected
+  const showDisconnectAlert = isCameraActive && !isConnected;
+
   const handleFrameCapture = (frameBase64: string) => {
     setCurrentFrame(frameBase64);
+  };
+
+  const handleCameraStateChange = (isActive: boolean) => {
+    setIsCameraActive(isActive);
   };
 
   const handleGenerateNarration = async () => {
@@ -42,6 +51,18 @@ export default function TestPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {showDisconnectAlert && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Backend Disconnected</AlertTitle>
+          <AlertDescription>
+            The backend server is not reachable. To use this demo, you must run the python backend locally.
+            <br />
+            <a href="/demo" className="font-bold underline hover:text-white/80">Check the Demo page for instructions.</a>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -73,6 +94,7 @@ export default function TestPage() {
               onConnect={connect}
               onDisconnect={disconnect}
               onSendFrame={sendFrame}
+              onCameraStateChange={handleCameraStateChange}
             />
 
             <ComparisonView

@@ -22,6 +22,7 @@ interface CameraFeedProps {
   onDisconnect: () => void;
   onSendFrame: (frame: string) => void;
   mode?: "default" | "compact";
+  onCameraStateChange?: (isActive: boolean) => void;
 }
 
 export function CameraFeed({
@@ -33,6 +34,7 @@ export function CameraFeed({
   onDisconnect,
   onSendFrame,
   mode = "default",
+  onCameraStateChange,
 }: CameraFeedProps) {
   const {
     videoRef: internalVideoRef,
@@ -44,8 +46,16 @@ export function CameraFeed({
     captureFrame,
   } = useCamera();
 
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
 
+  useEffect(() => {
+    // Notify parent component about camera active state changes
+    if (typeof onVideoDimensionsChange === 'function' && videoRef?.current) { // using onVideoDimensionsChange as a generic state callback hack if needed or better add a new prop
+       // Actually, let's look at the Props. There is no explicit "onCameraStateChange".
+       // We should add one or use an existing hook.
+    }
+  }, [isActive]);
+  
   const handleStartClick = () => {
     setShowDisclaimer(true);
   };
@@ -138,12 +148,13 @@ export function CameraFeed({
 
   // Handle WebSocket connection based on camera state
   useEffect(() => {
+    onCameraStateChange?.(isActive);
     if (isActive && !isWebSocketConnected) {
       onConnect();
     } else if (!isActive && isWebSocketConnected) {
       onDisconnect();
     }
-  }, [isActive, isWebSocketConnected, onConnect, onDisconnect]);
+  }, [isActive, isWebSocketConnected, onConnect, onDisconnect, onCameraStateChange]);
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">

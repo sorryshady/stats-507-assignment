@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
-import { Play, ExternalLink } from "lucide-react";
+import { Play, ExternalLink, AlertTriangle, Github, Mail } from "lucide-react";
 
 export default function DemoPage() {
   return (
@@ -10,8 +11,67 @@ export default function DemoPage() {
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold">Demo Videos</h1>
           <p className="text-xl text-muted-foreground">
-            See the system in action
+            See the system in action or try it yourself
           </p>
+        </div>
+
+        {/* Deployment / Testing Notice */}
+        <Alert variant="warning" className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold mb-2">
+            Important Note on Live Testing
+          </AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-400/90 space-y-2">
+            <p>
+              This project requires a powerful backend (running YOLO11 + Llama 3.2) which is currently hosted locally
+              on a MacBook Pro M4 to demonstrate edge-device capabilities.
+            </p>
+            <p className="font-medium">
+              The live interactive demo below will only work if the backend server is currently online.
+            </p>
+          </AlertDescription>
+        </Alert>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card>
+             <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Github className="w-5 h-5" />
+                Option A: Run Locally
+              </CardTitle>
+              <CardDescription>Best performance & privacy</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                To experience the full system with real-time latency, clone the repository and run the backend on your own machine.
+              </p>
+              <Button variant="outline" className="w-full" asChild>
+                <a href="https://github.com/akhilnis/final-project" target="_blank" rel="noopener noreferrer">
+                  View Source Code
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+             <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Option B: Request Live Demo
+              </CardTitle>
+              <CardDescription>Remote testing session</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                I can temporarily expose my local server via a secure tunnel for evaluation purposes. Contact me to schedule a time.
+              </p>
+              <Button variant="outline" className="w-full" asChild>
+                <a href="mailto:akhilnis@umich.edu">
+                  Contact Developer
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>

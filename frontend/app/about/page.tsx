@@ -17,7 +17,6 @@ import {
   BarChart3,
   Target,
   ExternalLink,
-  GraduationCap,
 } from "lucide-react";
 import { references } from "./references";
 
