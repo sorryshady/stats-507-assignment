@@ -17,9 +17,15 @@ import {
   BarChart3,
   Target,
   ExternalLink,
+  GraduationCap,
 } from "lucide-react";
+import { references } from "./references";
 
 export default function AboutPage() {
+  const commercialRefs = references.filter((r) => r.category === "commercial");
+  const technicalRefs = references.filter((r) => r.category === "technical");
+  const researchRefs = references.filter((r) => r.category === "research");
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-5xl mx-auto space-y-12">
@@ -108,176 +114,6 @@ export default function AboutPage() {
               </CardContent>
             </Card>
           </div>
-        </section>
-
-        {/* Literature Review */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 text-2xl font-bold">
-            <BookOpen className="w-6 h-6 text-purple-500" />
-            <h2>Literature Review</h2>
-          </div>
-
-          <Tabs defaultValue="commercial" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="commercial">Commercial Solutions</TabsTrigger>
-              <TabsTrigger value="technical">Technical Advances</TabsTrigger>
-            </TabsList>
-            <TabsContent value="commercial" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>State of the Market</CardTitle>
-                  <CardDescription>
-                    Existing tools and their limitations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4">
-                    <a
-                      href="https://www.microsoft.com/en-us/ai/seeing-ai"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 border rounded-lg relative group hover:border-primary transition-colors cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-lg mb-2">
-                          Microsoft Seeing AI (2017)
-                        </h3>
-                        <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                      <p className="text-muted-foreground">
-                        A mobile app using computer vision for object
-                        recognition and text reading.
-                        <strong> Limitation:</strong> Proprietary, closed-source
-                        ecosystem (recently released on Android).
-                      </p>
-                    </a>
-                    <a
-                      href="https://www.letsenvision.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 border rounded-lg relative group hover:border-primary transition-colors cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-lg mb-2">
-                          Envision App (2018)
-                        </h3>
-                        <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                      <p className="text-muted-foreground">
-                        Combines OCR and object detection.
-                        <strong> Limitation:</strong> Subscription-based model
-                        with limited customization options.
-                      </p>
-                    </a>
-                    <a
-                      href="https://play.google.com/store/apps/details?id=com.google.android.apps.accessibility.reveal"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 border rounded-lg relative group hover:border-primary transition-colors cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-lg mb-2">
-                          Google Lookout (2019)
-                        </h3>
-                        <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                      <p className="text-muted-foreground">
-                        Android app using computer vision to identify food
-                        labels, text, and objects.
-                        <strong> Limitation:</strong> Android-only, requires
-                        switching specific modes for different tasks.
-                      </p>
-                    </a>
-                  </div>
-                  <Alert>
-                    <Target className="h-4 w-4" />
-                    <AlertTitle>The Gap</AlertTitle>
-                    <AlertDescription>
-                      There is currently no open-source, end-to-end solution
-                      combining real-time object detection, scene understanding,
-                      and customizable AI narration for general accessibility
-                      use cases.
-                    </AlertDescription>
-                  </Alert>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="technical" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Advances</CardTitle>
-                  <CardDescription>
-                    The technologies enabling this project
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-4">
-                    <li className="block">
-                      <a
-                        href="https://docs.ultralytics.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 bg-muted/30 rounded-lg relative group hover:bg-muted/50 transition-colors cursor-pointer"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="font-semibold">
-                            YOLO Series (Redmon et al., 2016-2024)
-                          </div>
-                          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          Real-time object detection achieving &gt;20 FPS.
-                          YOLO11 (2024) improves efficiency with 22% fewer
-                          parameters than YOLOv8, crucial for edge deployment.
-                        </div>
-                      </a>
-                    </li>
-                    <li className="block">
-                      <a
-                        href="https://github.com/salesforce/BLIP"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 bg-muted/30 rounded-lg relative group hover:bg-muted/50 transition-colors cursor-pointer"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="font-semibold">
-                            Vision-Language Models (BLIP/LLaVA)
-                          </div>
-                          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          BLIP (Li et al., 2022) enables high-quality image
-                          captioning with ~156ms latency on modern hardware,
-                          bridging the gap between visual pixel data and
-                          semantic language.
-                        </div>
-                      </a>
-                    </li>
-                    <li className="block">
-                      <a
-                        href="https://cocodataset.org/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 bg-muted/30 rounded-lg relative group hover:bg-muted/50 transition-colors cursor-pointer"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="font-semibold">
-                            COCO Dataset (Lin et al., 2014)
-                          </div>
-                          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          Standard benchmark with 330K+ images and 80 object
-                          categories, providing the diverse, cluttered scenes
-                          necessary for training robust accessibility models.
-                        </div>
-                      </a>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
         </section>
 
         {/* Technical Approach */}
@@ -474,6 +310,146 @@ export default function AboutPage() {
               </p>
             </CardContent>
           </Card>
+        </section>
+
+        {/* Literature Review */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-2 text-2xl font-bold">
+            <BookOpen className="w-6 h-6 text-purple-500" />
+            <h2>Literature Review</h2>
+          </div>
+
+          <Tabs defaultValue="commercial" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="commercial">Commercial Solutions</TabsTrigger>
+              <TabsTrigger value="technical">Core Technology</TabsTrigger>
+              <TabsTrigger value="research">Related Research</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="commercial" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>State of the Market</CardTitle>
+                  <CardDescription>
+                    Existing tools and their limitations
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4">
+                    {commercialRefs.map((ref) => (
+                      <a
+                        key={ref.id}
+                        href={ref.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block p-4 border rounded-lg relative group hover:border-primary transition-colors cursor-pointer"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-semibold text-lg mb-2">
+                            {ref.title} ({ref.year})
+                          </h3>
+                          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                          {ref.talking_points.map((point, idx) => (
+                            <li key={idx}>{point}</li>
+                          ))}
+                        </ul>
+                      </a>
+                    ))}
+                  </div>
+                  <Alert>
+                    <Target className="h-4 w-4" />
+                    <AlertTitle>The Gap</AlertTitle>
+                    <AlertDescription>
+                      There is currently no open-source, end-to-end solution
+                      combining real-time object detection, scene understanding,
+                      and customizable AI narration for general accessibility
+                      use cases.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="technical" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Core Technologies</CardTitle>
+                  <CardDescription>
+                    The foundational models enabling this project
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-4">
+                    {technicalRefs.map((ref) => (
+                      <li key={ref.id} className="block">
+                        <a
+                          href={ref.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-4 bg-muted/30 rounded-lg relative group hover:bg-muted/50 transition-colors cursor-pointer"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="font-semibold">
+                              {ref.title}
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                             {ref.talking_points.map((point, idx) => (
+                                <p key={idx}>• {point}</p>
+                             ))}
+                          </div>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="research" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Academic Context</CardTitle>
+                  <CardDescription>
+                    Recent research papers and studies relevant to this work
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4">
+                    {researchRefs.map((ref) => (
+                      <a
+                        key={ref.id}
+                        href={ref.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block p-4 border rounded-lg relative group hover:border-primary transition-colors cursor-pointer"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex flex-col">
+                            <h3 className="font-semibold text-lg">
+                              {ref.title}
+                            </h3>
+                            <span className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-bold">
+                              {ref.type} • {ref.year}
+                            </span>
+                          </div>
+                          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 mt-2">
+                          {ref.talking_points.map((point, idx) => (
+                            <li key={idx}>{point}</li>
+                          ))}
+                        </ul>
+                      </a>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </section>
       </div>
     </div>
