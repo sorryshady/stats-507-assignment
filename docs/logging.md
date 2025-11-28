@@ -441,7 +441,7 @@ logging.basicConfig(
 )
 ```
 
-**What you'll see:**
+**Debug output includes:**
 
 - Frame processing details
 - Cooldown checks
@@ -541,10 +541,10 @@ logging.basicConfig(level=logging.DEBUG, ...)
 
 | Feature                   | Test Mode                                     | Normal Mode             |
 | ------------------------- | --------------------------------------------- | ----------------------- |
-| **Source Identification** | ✅ Logs image/video names                     | ❌ No source names      |
+| **Source Identification** | Yes - Logs image/video names                  | No - No source names    |
 | **Hazard Logging**        | Reduced (high priority only, every 30 frames) | Full (all hazards)      |
-| **LLM Input Logging**     | ✅ Complete inputs shown                      | ❌ Only final narration |
-| **Image Processing**      | ✅ Logs which image is processed              | ❌ No image tracking    |
+| **LLM Input Logging**     | Yes - Complete inputs shown                   | No - Only final narration |
+| **Image Processing**      | Yes - Logs which image is processed           | No - No image tracking  |
 | **Log Level**             | INFO (with test mode tags)                    | INFO/WARNING            |
 | **Audio**                 | Configurable (can disable warnings)           | Always enabled          |
 

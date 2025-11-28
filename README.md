@@ -6,7 +6,7 @@
 
 ---
 
-## 1. 🎯 Core Mission
+## 1. Core Mission
 
 To build a **wearable-simulated AI assistant** for visually impaired users that creates a comprehensive understanding of the physical world. Unlike traditional tools that simply list objects ("Person, Chair"), this system provides **spatial and temporal context** ("A person is walking towards you from the left").
 
@@ -19,7 +19,7 @@ The human brain processes vision in two modes: **Reflexes** (fast, survival-base
 
 ---
 
-## 2. 🏗️ Architectural Blueprint
+## 2. Architectural Blueprint
 
 ### High-Level Data Flow
 
@@ -58,9 +58,9 @@ graph TD
 
 ---
 
-## 3. 🛠️ The Tech Stack (v2.0)
+## 3. The Tech Stack (v2.0)
 
-We have upgraded the stack to leverage the M4 Pro's neural engine and the iPhone's advanced optics.
+The stack leverages the M4 Pro's neural engine and the iPhone's advanced optics.
 
 | Component         | Technology             | Role               | Reason for Choice                                                              |
 | :---------------- | :--------------------- | :----------------- | :----------------------------------------------------------------------------- |
@@ -73,7 +73,7 @@ We have upgraded the stack to leverage the M4 Pro's neural engine and the iPhone
 
 ---
 
-## 4. 📁 Project Structure
+## 4. Project Structure
 
 ```
 final/
@@ -138,7 +138,7 @@ final/
 
 ---
 
-## 5. 🚀 Quick Start
+## 5. Quick Start
 
 ### 1. Installation
 
@@ -195,20 +195,20 @@ python run.py
 
 ---
 
-## 6. 📚 Documentation
+## 6. Documentation
 
 - **[Usage Guide](docs/USAGE.md)** - Detailed running instructions
 - **[System Architecture](docs/CONTROL_FLOW.md)** - Detailed control flow
 - **[Logging System](docs/logging.md)** - Logging documentation
 - **[Web App Plan](docs/WEB_APP_PLAN.md)** - Full-stack architecture
 
-## 7. 🗓️ Current Status
+## 7. Current Status
 
-**Status:** ✅ Completed (Dec 3, 2025)
+**Status:** Completed (Dec 3, 2025)
 
-- ✅ Core ML pipeline (YOLO, BLIP, Llama 3.2)
-- ✅ CLI application with dual-loop system
-- ✅ Backend API (FastAPI)
-- ✅ Frontend (Next.js)
-- ✅ Jupyter notebook demo
-- ✅ Final Report (in `report/`)
+- Core ML pipeline (YOLO, BLIP, Llama 3.2)
+- CLI application with dual-loop system
+- Backend API (FastAPI)
+- Frontend (Next.js)
+- Jupyter notebook demo
+- Final Report (in `report/`)
