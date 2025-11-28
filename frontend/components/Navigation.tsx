@@ -14,7 +14,8 @@ const navItems = [
   { href: "/challenges", label: "Challenges" },
   { href: "/roadmap", label: "Roadmap" },
   { href: "/demo", label: "Demo" },
-  { href: "/test", label: "Test" },
+  // Only show Test page in development
+  ...(process.env.NODE_ENV === "development" ? [{ href: "/test", label: "Test" }] : []),
 ];
 
 export function Navigation() {

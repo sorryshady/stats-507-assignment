@@ -15,9 +15,53 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ListChecks, AlertTriangle } from "lucide-react";
+import { ListChecks, AlertTriangle, Github } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function TestPage() {
+  // Hide test page in production
+  if (process.env.NODE_ENV === "production") {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-2xl mx-auto text-center space-y-6">
+          <Alert variant="warning">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Test Page Unavailable</AlertTitle>
+            <AlertDescription>
+              The interactive test page is only available in development mode for performance reasons.
+              <br />
+              <br />
+              To use the test page, please run the application locally:
+            </AlertDescription>
+          </Alert>
+          <Card>
+            <CardHeader>
+              <CardTitle>Run Locally</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ol className="list-decimal list-inside space-y-2 text-left text-muted-foreground">
+                <li>Clone the repository from GitHub</li>
+                <li>Set up the backend (see README.md)</li>
+                <li>Run <code className="bg-muted px-2 py-1 rounded">npm run dev</code> in the frontend directory</li>
+                <li>The test page will be available at <code className="bg-muted px-2 py-1 rounded">/test</code></li>
+              </ol>
+              <Button asChild className="w-full">
+                <a
+                  href="https://github.com/sorryshady/stats-507-assignment"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github className="w-4 h-4 mr-2" />
+                  View Source Code
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
   const { detections, isConnected, error, connect, disconnect, sendFrame } =
     useWebSocket();
   const [currentFrame, setCurrentFrame] = useState<string | null>(null);

@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
-import { Play, ExternalLink, AlertTriangle, Github, Mail } from "lucide-react";
+import { Play, ExternalLink, AlertTriangle, Github } from "lucide-react";
 
 export default function DemoPage() {
   return (
@@ -28,66 +28,20 @@ export default function DemoPage() {
         >
           <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold mb-2">
-            Important Note on Live Testing
+            Local Setup Required
           </AlertTitle>
           <AlertDescription className="text-amber-700 dark:text-amber-400/90 space-y-2">
             <p>
               This project requires a powerful backend (running YOLO11 + Llama
-              3.2) which is currently hosted locally on a MacBook Pro M4 to
-              demonstrate edge-device capabilities.
+              3.2) to process real-time video feeds. Due to computational requirements,
+              the interactive demo is only available when running the application locally.
             </p>
             <p className="font-medium">
-              The live interactive demo below will only work if the backend
-              server is currently online.
+              To try the interactive demo, please clone the repository and follow
+              the setup instructions below.
             </p>
           </AlertDescription>
         </Alert>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Github className="w-5 h-5" />
-                Option A: Run Locally
-              </CardTitle>
-              <CardDescription>Best performance & privacy</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                To experience the full system with real-time latency, clone the
-                repository and run the backend on your own machine.
-              </p>
-              <Button variant="outline" className="w-full" asChild>
-                <a
-                  href="https://github.com/sorryshady/stats-507-assignment"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View Source Code
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
-                Option B: Request Live Demo
-              </CardTitle>
-              <CardDescription>Remote testing session</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                I can temporarily expose my local server via a secure tunnel for
-                evaluation purposes. Contact me to schedule a time.
-              </p>
-              <Button variant="outline" className="w-full" asChild>
-                <a href="mailto:akhilnis@umich.edu">Contact Developer</a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
 
         <Card>
           <CardHeader>
@@ -99,15 +53,38 @@ export default function DemoPage() {
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
               The best way to experience Describe My Environment is to try it
-              yourself! Use the interactive test page to see real-time object
+              yourself! The interactive test page allows you to see real-time object
               detection, tracking, and AI narration powered by your camera feed.
             </p>
-            <Link href="/test">
-              <Button size="lg" className="w-full sm:w-auto">
-                <Play className="w-4 h-4 mr-2" />
-                Try Interactive Demo
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Local Setup Required</AlertTitle>
+              <AlertDescription>
+                Due to the computational requirements of real-time AI processing,
+                the interactive test page is only available when running the application
+                locally. Clone the repository and follow the setup instructions to try it yourself.
+              </AlertDescription>
+            </Alert>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button size="lg" className="w-full sm:w-auto" asChild>
+                <a
+                  href="https://github.com/sorryshady/stats-507-assignment"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github className="w-4 h-4 mr-2" />
+                  View Source Code
+                </a>
               </Button>
-            </Link>
+              {process.env.NODE_ENV === "development" && (
+                <Link href="/test">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    <Play className="w-4 h-4 mr-2" />
+                    Try Interactive Demo
+                  </Button>
+                </Link>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -162,22 +139,31 @@ export default function DemoPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
+            <CardTitle>Getting Started (Local Setup)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              To run the interactive test page locally:
+            </p>
             <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-              <li>Make sure the backend server is running on port 8000</li>
+              <li>Clone the repository from GitHub</li>
+              <li>Set up Python virtual environment and install backend dependencies</li>
+              <li>Start the backend server on port 8000</li>
               <li>Ensure Ollama is running with Llama 3.2 3B model</li>
-              <li>Navigate to the Test page</li>
-              <li>Click &quot;Start Camera&quot; and grant permission</li>
+              <li>Run <code className="bg-muted px-2 py-1 rounded text-xs">npm run dev</code> in the frontend directory</li>
+              <li>Navigate to the Test page and click &quot;Start Camera&quot;</li>
               <li>Watch real-time detections and try the narration feature</li>
             </ol>
-            <Link href="/test">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Go to Test Page
-              </Button>
-            </Link>
+            <Button variant="outline" className="w-full sm:w-auto" asChild>
+              <a
+                href="https://github.com/sorryshady/stats-507-assignment"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Github className="w-4 h-4 mr-2" />
+                View Source Code & Setup Instructions
+              </a>
+            </Button>
           </CardContent>
         </Card>
       </div>

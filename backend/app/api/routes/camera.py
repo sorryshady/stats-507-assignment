@@ -3,6 +3,7 @@
 import json
 import base64
 import logging
+import asyncio
 import numpy as np
 import cv2
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -92,6 +93,51 @@ async def websocket_camera(websocket: WebSocket):
         return
     
     frame_id = 0
+    processing = False
+    pending_frame = None  # Store latest frame while processing
+    
+    async def process_frame_async(frame_data, current_frame_id, timestamp):
+        """Process frame asynchronously in thread pool to avoid blocking event loop."""
+        nonlocal processing
+        try:
+            # Decode image (fast, can stay in async)
+            frame = decode_base64_image(frame_data)
+            
+            # Run CPU-bound processing in thread pool to avoid blocking
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None,  # Use default thread pool
+                system_manager.process_frame,
+                frame,
+                current_frame_id,
+                timestamp
+            )
+            
+            response = {
+                "type": "frame_result",
+                "frame_id": result["frame_id"],
+                "timestamp": result["timestamp"],
+                "detections": result["detections"],
+                "hazards": result["hazards"],
+            }
+            
+            # Include annotated frame if available
+            if result["annotated_frame"] is not None:
+                annotated_base64 = encode_image_to_base64(result["annotated_frame"])
+                response["annotated_frame"] = annotated_base64
+            
+            await websocket.send_json(response)
+        except Exception as e:
+            logger.error(f"Error processing frame: {e}", exc_info=True)
+            try:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"Frame processing error: {str(e)}"
+                })
+            except:
+                pass
+        finally:
+            processing = False
     
     try:
         while True:
@@ -109,48 +155,38 @@ async def websocket_camera(websocket: WebSocket):
             
             # Process frame message
             if message.get("type") == "frame":
-                try:
-                    # Extract frame data
-                    image_data = message.get("data", "")
-                    timestamp = message.get("timestamp", None)
-                    
-                    if not image_data:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "No image data provided"
-                        })
-                        continue
-                    
-                    # Decode image
-                    frame = decode_base64_image(image_data)
-                    
-                    # Process frame
-                    result = system_manager.process_frame(frame, frame_id=frame_id, timestamp=timestamp)
-                    frame_id += 1
-                    
-                    # Prepare response
-                    response = {
-                        "type": "frame_result",
-                        "frame_id": result["frame_id"],
-                        "timestamp": result["timestamp"],
-                        "detections": result["detections"],
-                        "hazards": result["hazards"],
-                    }
-                    
-                    # Include annotated frame if available
-                    if result["annotated_frame"] is not None:
-                        annotated_base64 = encode_image_to_base64(result["annotated_frame"])
-                        response["annotated_frame"] = annotated_base64
-                    
-                    # Send response
-                    await websocket.send_json(response)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing frame: {e}", exc_info=True)
+                image_data = message.get("data", "")
+                timestamp = message.get("timestamp", None)
+                
+                if not image_data:
                     await websocket.send_json({
                         "type": "error",
-                        "message": f"Frame processing error: {str(e)}"
+                        "message": "No image data provided"
                     })
+                    continue
+                
+                # If already processing, store the latest frame and skip
+                if processing:
+                    pending_frame = (image_data, frame_id, timestamp)
+                    frame_id += 1
+                    continue
+                
+                # Start processing this frame
+                processing = True
+                current_frame_id = frame_id
+                frame_id += 1
+                
+                # Process in background (non-blocking)
+                asyncio.create_task(process_frame_async(image_data, current_frame_id, timestamp))
+                
+                # If there's a pending frame, process it next
+                if pending_frame:
+                    pending_data, pending_id, pending_ts = pending_frame
+                    pending_frame = None
+                    processing = True
+                    current_frame_id = frame_id
+                    frame_id += 1
+                    asyncio.create_task(process_frame_async(pending_data, current_frame_id, pending_ts))
             
             elif message.get("type") == "ping":
                 # Heartbeat/ping message
