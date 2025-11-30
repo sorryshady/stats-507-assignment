@@ -158,14 +158,15 @@ export default function DemoPage() {
               >
                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold">
-                  Current Limitations
+                  Hazard Detection Conditions
                 </AlertTitle>
                 <AlertDescription className="text-amber-700 dark:text-amber-400/90">
-                  Currently, stationary cars may also show hazard warnings due
-                  to limitations in relative motion tracking. This demonstration
-                  showcases the basic functionality of how the hazard detection
-                  system would work. Future improvements will better distinguish
-                  between stationary and moving objects.
+                  This demonstration showcases how hazard detection would work
+                  in the future. Hazards are detected when objects are{" "}
+                  <strong>expanding</strong> (getting closer){" "}
+                  <strong>and moving toward the center</strong> of the frame.
+                  Due to limitations in relative motion tracking, stationary
+                  objects may sometimes trigger false warnings.
                 </AlertDescription>
               </Alert>
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
