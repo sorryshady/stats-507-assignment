@@ -2,7 +2,9 @@
 
 **Course:** STATS 507  
 **Focus:** Full-Stack ML Engineering / Edge Computing  
-**Target Hardware:** Apple Silicon (M4 Pro) & iPhone 17 Pro (Ultra-Wide)
+**Target Hardware:** Apple Silicon (M4 Pro) with camera input support (webcam or iPhone Continuity Camera)
+
+🌐 **Project Website:** [https://stats-507-assignment.vercel.app/](https://stats-507-assignment.vercel.app/)
 
 ---
 
@@ -195,13 +197,30 @@ python run.py
 
 ---
 
-## 6. Documentation
+## 6. Live Demo & Project Website
+
+🌐 **Deployed Website:** [https://stats-507-assignment.vercel.app/](https://stats-507-assignment.vercel.app/)
+
+The deployed website showcases:
+
+- Project overview and architecture
+- Demo videos demonstrating the system's capabilities
+- Technical documentation and features
+- About page with project details
+
+**Note:** The deployed website displays demo videos and project information. For **interactive functionality** (real-time camera feed, object detection, and narration), you need to **clone the repository and run it locally** following the [Quick Start](#5-quick-start) guide above.
+
+---
+
+## 7. Documentation
 
 - **[Usage Guide](docs/USAGE.md)** - Detailed running instructions
 - **[System Architecture](docs/CONTROL_FLOW.md)** - Detailed control flow
 - **[Web App Plan](docs/WEB_APP_PLAN.md)** - Full-stack architecture
 
-## 7. Current Status
+---
+
+## 8. Current Status
 
 **Status:** Completed (Dec 3, 2025)
 
