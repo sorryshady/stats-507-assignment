@@ -184,10 +184,17 @@ uvicorn app.main:app --reload --port 8000
 # In a new terminal
 cd frontend
 npm install
+
+# Copy environment variables template
+cp .env.local.example .env.local
+
+# Start development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+**Note:** The `.env.local` file configures the API and WebSocket URLs. Default values point to `http://localhost:8000` for the backend.
 
 ### 4. Run the CLI Application (Legacy)
 
