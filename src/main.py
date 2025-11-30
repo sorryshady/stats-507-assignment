@@ -20,6 +20,7 @@ from src.config import (
     TEST_MODE_QUIET_HAZARDS,
     TEST_MODE_DISABLE_AUDIO,
     SHOW_TRACKING_VISUALIZATION,
+    VISUAL_WARNING_PERSISTENCE_DURATION,
 )
 from src.hardware.camera import CameraHandler
 from src.hardware.audio import AudioHandler
@@ -117,9 +118,7 @@ class DualLoopSystem:
 
         # Visual warning persistence (keep warning visible for minimum duration)
         self.last_hazard_detection_time = 0.0
-        self.visual_warning_duration = (
-            1.0  # Keep warning visible for 1 second after last detection
-        )
+        self.visual_warning_duration = VISUAL_WARNING_PERSISTENCE_DURATION
 
         # Video recording
         self.video_writer: Optional[cv2.VideoWriter] = None

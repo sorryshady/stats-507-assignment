@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
-import { Play, AlertTriangle, Github } from "lucide-react";
+import { Play, AlertTriangle, Github, Info } from "lucide-react";
 import Image from "next/image";
 import multi_detection from "./images/multi_detection.jpg";
 
@@ -92,6 +92,25 @@ export default function DemoPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <AlertTitle className="text-blue-800 dark:text-blue-300 font-semibold">
+                Video Capture Setup
+              </AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-400/90">
+                These videos were captured using an iPhone 17 Pro as the camera
+                input while running the pipeline. To use your iPhone as a
+                camera, you can change the corresponding{" "}
+                <code className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded text-xs">
+                  CAMERA_DEVICE_ID
+                </code>{" "}
+                value in{" "}
+                <code className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded text-xs">
+                  config.py
+                </code>
+                .
+              </AlertDescription>
+            </Alert>
             <div className="space-y-2">
               <h3 className="font-semibold">Real-Time Object Detection</h3>
               <p className="text-sm text-muted-foreground">
@@ -133,6 +152,22 @@ export default function DemoPage() {
                 Watch how the system identifies approaching hazards and provides
                 real-time alerts.
               </p>
+              <Alert
+                variant="warning"
+                className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 mb-6"
+              >
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold">
+                  Current Limitations
+                </AlertTitle>
+                <AlertDescription className="text-amber-700 dark:text-amber-400/90">
+                  Currently, stationary cars may also show hazard warnings due
+                  to limitations in relative motion tracking. This demonstration
+                  showcases the basic functionality of how the hazard detection
+                  system would work. Future improvements will better distinguish
+                  between stationary and moving objects.
+                </AlertDescription>
+              </Alert>
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                 {video2Error ? (
                   <Image

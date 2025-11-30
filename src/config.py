@@ -16,7 +16,7 @@ GLOBAL_WARNING_COOLDOWN = 5.0  # Minimum seconds between ANY warnings (prevents 
 HAZARD_CLASSES = ["car", "truck", "bus", "bicycle", "motorcycle", "person"]
 
 # Camera Configuration
-CAMERA_DEVICE_ID = 1  # Default webcam, adjust for iPhone
+CAMERA_DEVICE_ID = 0  # Default webcam, adjust for iPhone, 0 for default webcam, 1 for iPhone if using iphone continuity camera
 CAMERA_FPS = 30
 CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720
@@ -56,3 +56,8 @@ TEST_MODE_DISABLE_AUDIO = (
 
 # Visualization Settings
 SHOW_TRACKING_VISUALIZATION = True  # Show live tracking feed with bounding boxes
+VISUAL_WARNING_PERSISTENCE_DURATION = (
+    1.0  # Seconds to keep visual hazard warning visible after last detection
+    # Reduces flickering at high FPS, but may make false positives more noticeable
+    # Recommended: 0.5-1.0 seconds (0.5 for less persistence, 1.0 for smoother display)
+)
