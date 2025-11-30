@@ -68,6 +68,8 @@ datasets/
 !frontend/public/*.png
 !frontend/public/about/
 !frontend/public/about/**
+!frontend/opengraph-image.png
+!frontend/twitter-image.png
 
 
 # Logs
