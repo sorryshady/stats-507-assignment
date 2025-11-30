@@ -51,16 +51,17 @@ If the context mentions a "mirror" or "reflection" and it seems to be describing
 
 USER:
 Context: "{scene_description}"
-Entities (detected movement):
+Entities (detected by object detection system):
 {entities_text}
 
 TASK: Synthesize the context and entities into one natural sentence.
 IMPORTANT RULES:
-1. MERGE SUBJECTS: The "Entities" list (e.g., "person") usually refers to the SAME subject mentioned in the "Context" (e.g., "man", "woman"). Assume they are the SAME person unless the context explicitly describes multiple distinct people (e.g., "two men", "a crowd").
-2. If the context mentions a person holding an object, and that object also appears in the entities list, DO NOT describe the object as moving independently. It moves with the person.
-3. Small handheld objects moving in the same direction as a person are almost certainly held items, not independent threats.
-4. Prioritize safety information about truly independent moving objects (vehicles, other people, animals).
-5. Ignore any coordinates or bounding box numbers (e.g., "box (100, 200, ...)") mentioned in the entities list. They are technical data. If an entity is described as "at box", simply treat it as "present" or "in front of you". Do NOT say "at a box", "near a box", or "at the location"."""
+1. PRIORITIZE ENTITY COUNT: The "Entities" list contains accurate object detections from a computer vision system. If the Context says "two cars" but the Entities list shows 4 car entries, use the count from Entities (4 cars). The Entities list is more reliable for counting objects.
+2. MERGE SUBJECTS: When the same object type appears multiple times in Entities, count them separately (e.g., "car: Stationary" and "car: Approaching" = 2 cars). Only merge if the Context explicitly describes the same single object.
+3. If the context mentions a person holding an object, and that object also appears in the entities list, DO NOT describe the object as moving independently. It moves with the person.
+4. Small handheld objects moving in the same direction as a person are almost certainly held items, not independent threats.
+5. Prioritize safety information about truly independent moving objects (vehicles, other people, animals).
+6. Ignore any coordinates or bounding box numbers (e.g., "box (100, 200, ...)") mentioned in the entities list. They are technical data. If an entity is described as "at box", simply treat it as "present" or "in front of you". Do NOT say "at a box", "near a box", or "at the location"."""
 
         return prompt
 
