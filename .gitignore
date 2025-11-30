@@ -58,9 +58,17 @@ datasets/
 *.mp4
 *.avi
 *.mov
+# Exceptions for images we want to track
 !test_images/
+!test_images/**
+!frontend/public/
+!frontend/public/**
+!frontend/public/*.jpg
+!frontend/public/*.jpeg
+!frontend/public/*.png
 !frontend/public/about/
 !frontend/public/about/**
+
 
 # Logs
 *.log
