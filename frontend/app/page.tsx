@@ -110,7 +110,8 @@ export default function HomePage() {
             Ready to Experience It?
           </h2>
           <p className="text-xl text-background/80 mb-8 max-w-2xl mx-auto">
-            Join the beta and help us shape the future of assistive technology.
+            Try the interactive application and explore real-time object
+            detection and AI-powered narration.
           </p>
           <Link href="/test">
             <Button
