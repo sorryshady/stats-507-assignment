@@ -13,7 +13,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { Play, AlertTriangle, Github, Info } from "lucide-react";
 import Image from "next/image";
-import multi_detection from "./images/multi_detection.jpg";
 
 export default function DemoPage() {
   const [video1Error, setVideo1Error] = useState(false);
@@ -121,7 +120,7 @@ export default function DemoPage() {
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                 {video1Error ? (
                   <Image
-                    src={multi_detection}
+                    src="/multi_detection.jpg"
                     alt="Real-Time Object Detection"
                     width={1000}
                     height={1000}
@@ -172,7 +171,7 @@ export default function DemoPage() {
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                 {video2Error ? (
                   <Image
-                    src={multi_detection}
+                    src="/hazard_detection.jpg"
                     alt="Hazard Detection & Alerts"
                     width={1000}
                     height={1000}
@@ -207,7 +206,7 @@ export default function DemoPage() {
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                 {video3Error ? (
                   <Image
-                    src={multi_detection}
+                    src="/analysis.jpg"
                     alt="AI Narration"
                     width={1000}
                     height={1000}
