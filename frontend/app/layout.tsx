@@ -46,6 +46,14 @@ export const metadata: Metadata = {
     title: "Describe My Environment | See Your World Through AI",
     description:
       "Real-time object detection and AI-powered narration for visually impaired users. Navigate your environment with confidence using advanced machine learning.",
+    images: [
+      {
+        url: "https://stats-507-assignment.vercel.app/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Describe My Environment - AI-Powered Visual Assistant",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -53,6 +61,14 @@ export const metadata: Metadata = {
     description:
       "Real-time object detection and AI-powered narration for visually impaired users. Navigate your environment with confidence.",
     creator: "@akhil_nishad_01",
+    images: [
+      {
+        url: "https://stats-507-assignment.vercel.app/twitter-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Describe My Environment - AI-Powered Visual Assistant",
+      },
+    ],
   },
   robots: {
     index: true,
