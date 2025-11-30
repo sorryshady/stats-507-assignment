@@ -70,6 +70,8 @@ datasets/
 !frontend/public/about/**
 !frontend/opengraph-image.png
 !frontend/twitter-image.png
+!frontend/app/icon1.png
+!frontend/app/apple-icon.png
 
 
 # Logs

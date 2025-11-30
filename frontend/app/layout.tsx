@@ -92,10 +92,7 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
-        <meta
-          name="apple-mobile-web-app-title"
-          content="Describe My Environment"
-        />
+        <meta name="apple-mobile-web-app-title" content="VisionAI" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Navigation />
