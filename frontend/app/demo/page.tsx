@@ -98,17 +98,19 @@ export default function DemoPage() {
                 Video Capture Setup
               </AlertTitle>
               <AlertDescription className="text-blue-700 dark:text-blue-400/90">
-                These videos were captured using an iPhone 17 Pro as the camera
-                input while running the pipeline. To use your iPhone as a
-                camera, you can change the corresponding{" "}
-                <code className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded text-xs">
-                  CAMERA_DEVICE_ID
-                </code>{" "}
-                value in{" "}
-                <code className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded text-xs">
-                  config.py
-                </code>
-                .
+                <p>
+                  These videos were captured using an iPhone 17 Pro as the
+                  camera input while running the pipeline. To use your iPhone as
+                  a camera, you can change the corresponding{" "}
+                  <code className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded text-xs">
+                    CAMERA_DEVICE_ID
+                  </code>{" "}
+                  value in{" "}
+                  <code className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded text-xs">
+                    config.py
+                  </code>
+                  .
+                </p>
               </AlertDescription>
             </Alert>
             <div className="space-y-2">
@@ -161,12 +163,18 @@ export default function DemoPage() {
                   Hazard Detection Conditions
                 </AlertTitle>
                 <AlertDescription className="text-amber-700 dark:text-amber-400/90">
-                  This demonstration showcases how hazard detection would work
-                  in the future. Hazards are detected when objects are{" "}
-                  <strong>expanding</strong> (getting closer){" "}
-                  <strong>and moving toward the center</strong> of the frame.
-                  Due to limitations in relative motion tracking, stationary
-                  objects may sometimes trigger false warnings.
+                  <p>
+                    This demonstration showcases how hazard detection would work
+                    in the future. Hazards are detected when objects are{" "}
+                    <strong className="inline">expanding</strong> (getting
+                    closer){" "}
+                    <strong className="inline">
+                      and moving toward the center
+                    </strong>{" "}
+                    of the frame. Due to limitations in relative motion
+                    tracking, stationary objects may sometimes trigger false
+                    warnings.
+                  </p>
                 </AlertDescription>
               </Alert>
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
