@@ -105,7 +105,10 @@ class DualLoopSystem:
         self.last_warned_hazard_id = None  # Track which hazard we last warned about
         self.hazard_warning_cooldown = 3.0  # Don't warn about same hazard for 3 seconds
         from src.config import GLOBAL_WARNING_COOLDOWN
-        self.global_warning_cooldown = GLOBAL_WARNING_COOLDOWN  # Global cooldown for ALL warnings (5 seconds)
+
+        self.global_warning_cooldown = (
+            GLOBAL_WARNING_COOLDOWN  # Global cooldown for ALL warnings (5 seconds)
+        )
 
         # Visualization
         self.show_visualization = SHOW_TRACKING_VISUALIZATION
@@ -258,10 +261,25 @@ class DualLoopSystem:
                     detections, self.history_buffer
                 )
 
+                # Add visual warning to annotated frame if hazards detected
+                if hazards and self.show_visualization and annotated_frame is not None:
+                    cv2.putText(
+                        annotated_frame,
+                        "HAZARD DETECTED",
+                        (50, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (0, 0, 255),
+                        3,
+                    )
+                    # Update stored annotated frame with visual warning
+                    with self.frame_lock:
+                        self.annotated_frame = annotated_frame.copy()
+
                 # Trigger warning if needed (with rate limiting)
                 if self.safety_monitor.should_warn(hazards):
                     current_time = time.time()
-                    
+
                     # GLOBAL COOLDOWN: Don't warn if ANY warning was fired recently (5 seconds)
                     time_since_last_warning = current_time - self.last_warning_time
                     if time_since_last_warning < self.global_warning_cooldown:
@@ -270,7 +288,7 @@ class DualLoopSystem:
                             f"(last warning {time_since_last_warning:.2f}s ago, need {self.global_warning_cooldown}s)"
                         )
                         continue  # Skip this frame's warning entirely
-                    
+
                     warning_msg = self.safety_monitor.get_warning_message(hazards)
                     high_priority = any(h.priority == "high" for h in hazards)
 
@@ -375,7 +393,9 @@ class DualLoopSystem:
                             )
                             # Speech will wait for beep to finish automatically
                             self.audio.speak_text(warning_msg, priority=True)
-                            self.last_warning_time = current_time  # Update global warning time
+                            self.last_warning_time = (
+                                current_time  # Update global warning time
+                            )
                             # Remember which hazard we warned about
                             self.last_warned_hazard_id = current_hazard_id
 

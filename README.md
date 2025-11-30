@@ -26,7 +26,7 @@ The human brain processes vision in two modes: **Reflexes** (fast, survival-base
 ```mermaid
 graph TD
     %% Hardware Layer
-    Input["iPhone 17 Pro Camera (0.5x Ultra-Wide)"] -->|Raw Frame Stream| AppEntryPoint
+    Input["camera input"] -->|Raw Frame Stream| AppEntryPoint
 
     %% The Dual-Loop Split
     AppEntryPoint -->|Stream Copy| SafetyLoop
@@ -40,7 +40,7 @@ graph TD
     end
 
     %% 2. The Cognitive Loop (Slow/Smart)
-    subgraph "Cognitive Loop (On-Demand)"
+    subgraph "Cognitive Loop (OnDemand)"
         CognitiveLoop[Input Handler]
         CognitiveLoop -->|Current Frame| BLIP["BLIP Model (Scene Context)"]
         CognitiveLoop -->|Last 90 Frames| History["History Buffer (Trajectory Analysis)"]
