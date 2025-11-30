@@ -46,21 +46,12 @@ export const metadata: Metadata = {
     title: "Describe My Environment | See Your World Through AI",
     description:
       "Real-time object detection and AI-powered narration for visually impaired users. Navigate your environment with confidence using advanced machine learning.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Describe My Environment - AI-Powered Visual Assistant",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Describe My Environment | See Your World Through AI",
     description:
       "Real-time object detection and AI-powered narration for visually impaired users. Navigate your environment with confidence.",
-    images: ["/og-image.jpg"],
     creator: "@akhil_nishad_01",
   },
   robots: {
