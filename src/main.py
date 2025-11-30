@@ -115,6 +115,12 @@ class DualLoopSystem:
         # Visualization
         self.show_visualization = SHOW_TRACKING_VISUALIZATION
 
+        # Visual warning persistence (keep warning visible for minimum duration)
+        self.last_hazard_detection_time = 0.0
+        self.visual_warning_duration = (
+            1.0  # Keep warning visible for 1 second after last detection
+        )
+
         # Video recording
         self.video_writer: Optional[cv2.VideoWriter] = None
         self.record_video = False
@@ -281,18 +287,28 @@ class DualLoopSystem:
                         ) % (2**31)
                     self.history_buffer.add_detection(object_id, detection)
 
-                # Store annotated frame for main thread to display (OpenCV requires main thread)
-                if self.show_visualization and annotated_frame is not None:
-                    with self.frame_lock:
-                        self.annotated_frame = annotated_frame.copy()
-
-                # Check for hazards
+                # Check for hazards BEFORE storing frame
                 hazards = self.safety_monitor.check_hazards(
                     detections, self.history_buffer
                 )
 
-                # Add visual warning to annotated frame if hazards detected
-                if hazards and self.show_visualization and annotated_frame is not None:
+                # Update last hazard detection time if hazards are present
+                current_time = time.time()
+                if hazards:
+                    self.last_hazard_detection_time = current_time
+
+                # Add visual warning to annotated frame if hazards detected OR within persistence window
+                # This ensures warning stays visible for minimum duration even if hazard condition is brief
+                time_since_last_hazard = current_time - self.last_hazard_detection_time
+                should_show_warning = (
+                    hazards or time_since_last_hazard < self.visual_warning_duration
+                )
+
+                if (
+                    should_show_warning
+                    and self.show_visualization
+                    and annotated_frame is not None
+                ):
                     cv2.putText(
                         annotated_frame,
                         "HAZARD DETECTED",
@@ -302,7 +318,10 @@ class DualLoopSystem:
                         (0, 0, 255),
                         3,
                     )
-                    # Update stored annotated frame with visual warning
+
+                # Store annotated frame for main thread to display (OpenCV requires main thread)
+                # Frame is stored ONCE with all annotations (including hazard warning if present)
+                if self.show_visualization and annotated_frame is not None:
                     with self.frame_lock:
                         self.annotated_frame = annotated_frame.copy()
 

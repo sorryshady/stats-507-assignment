@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,9 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
-import { Play, ExternalLink, AlertTriangle, Github } from "lucide-react";
+import { Play, AlertTriangle, Github } from "lucide-react";
+import Image from "next/image";
+import multi_detection from "./images/multi_detection.jpg";
 
 export default function DemoPage() {
+  const [video1Error, setVideo1Error] = useState(false);
+  const [video2Error, setVideo2Error] = useState(false);
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -31,8 +38,9 @@ export default function DemoPage() {
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
               The best way to experience Describe My Environment is to try it
-              yourself! The interactive test page allows you to see real-time object
-              detection, tracking, and AI narration powered by your camera feed.
+              yourself! The interactive test page allows you to see real-time
+              object detection, tracking, and AI narration powered by your
+              camera feed.
             </p>
             <Alert
               variant="warning"
@@ -43,9 +51,10 @@ export default function DemoPage() {
                 Local Setup Required
               </AlertTitle>
               <AlertDescription className="text-amber-700 dark:text-amber-400/90">
-                Due to the computational requirements of real-time AI processing,
-                the interactive test page is only available when running the application
-                locally. Clone the repository and follow the setup instructions to try it yourself.
+                Due to the computational requirements of real-time AI
+                processing, the interactive test page is only available when
+                running the application locally. Clone the repository and follow
+                the setup instructions to try it yourself.
               </AlertDescription>
             </Alert>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -61,7 +70,11 @@ export default function DemoPage() {
               </Button>
               {process.env.NODE_ENV === "development" && (
                 <Link href="/test">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
                     <Play className="w-4 h-4 mr-2" />
                     Try Interactive Demo
                   </Button>
@@ -85,10 +98,32 @@ export default function DemoPage() {
                 See how the system detects and tracks multiple objects
                 simultaneously with bounding boxes and confidence scores.
               </p>
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">
-                  Video placeholder - Add your demo video here
-                </p>
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                {video1Error ? (
+                  <Image
+                    src={multi_detection}
+                    alt="Real-Time Object Detection"
+                    width={1000}
+                    height={1000}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <video
+                    loop
+                    muted
+                    controls={false}
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                    onError={() => setVideo1Error(true)}
+                    className="w-full h-full object-contain"
+                  >
+                    <source
+                      src="https://oq2yl4ptfo.ufs.sh/f/a33X8THVEOZY4IvGt8yaAnUPqdLmJGV3S6I0j7kgOfoh4uBy"
+                      type="video/mp4"
+                    />
+                  </video>
+                )}
               </div>
             </div>
 
@@ -98,10 +133,32 @@ export default function DemoPage() {
                 Watch how the system identifies approaching hazards and provides
                 real-time alerts.
               </p>
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">
-                  Video placeholder - Add your demo video here
-                </p>
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                {video2Error ? (
+                  <Image
+                    src={multi_detection}
+                    alt="Hazard Detection & Alerts"
+                    width={1000}
+                    height={1000}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <video
+                    loop
+                    muted
+                    controls={false}
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                    onError={() => setVideo2Error(true)}
+                    className="w-full h-full object-contain"
+                  >
+                    <source
+                      src="https://oq2yl4ptfo.ufs.sh/f/a33X8THVEOZYOMrrno1K4oj9BqVdefYZ5IGah7UwR6CtNWsv"
+                      type="video/mp4"
+                    />
+                  </video>
+                )}
               </div>
             </div>
 
@@ -130,11 +187,22 @@ export default function DemoPage() {
             </p>
             <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
               <li>Clone the repository from GitHub</li>
-              <li>Set up Python virtual environment and install backend dependencies</li>
+              <li>
+                Set up Python virtual environment and install backend
+                dependencies
+              </li>
               <li>Start the backend server on port 8000</li>
               <li>Ensure Ollama is running with Llama 3.2 3B model</li>
-              <li>Run <code className="bg-muted px-2 py-1 rounded text-xs">npm run dev</code> in the frontend directory</li>
-              <li>Navigate to the Test page and click &quot;Start Camera&quot;</li>
+              <li>
+                Run{" "}
+                <code className="bg-muted px-2 py-1 rounded text-xs">
+                  npm run dev
+                </code>{" "}
+                in the frontend directory
+              </li>
+              <li>
+                Navigate to the Test page and click &quot;Start Camera&quot;
+              </li>
               <li>Watch real-time detections and try the narration feature</li>
             </ol>
             <Button variant="outline" className="w-full sm:w-auto" asChild>
