@@ -105,18 +105,47 @@ class CameraHandler:
             self._load_test_images()
             return
 
+        # Try to open video file
         self.cap = cv2.VideoCapture(str(video_file))
         if not self.cap.isOpened():
             logger.error(f"Failed to open test video: {video_path}")
+            logger.warning(
+                "This might be a codec issue. iPhone .MOV files sometimes use HEVC/H.265 codec."
+            )
+            logger.warning(
+                "If this persists, try converting the video to H.264: "
+                "ffmpeg -i input.MOV -c:v libx264 -c:a aac output.mp4"
+            )
             logger.info("Falling back to test images...")
             self._load_test_images()
             return
 
+        # Verify we can actually read frames
+        ret, test_frame = self.cap.read()
+        if not ret or test_frame is None:
+            logger.error(f"Failed to read frames from video: {video_path}")
+            logger.warning("Video file may be corrupted or use an unsupported codec.")
+            self.cap.release()
+            self.cap = None
+            logger.info("Falling back to test images...")
+            self._load_test_images()
+            return
+
+        # Reset to beginning after test read
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
         self.using_video = True
         fps = self.cap.get(cv2.CAP_PROP_FPS)
         frame_count = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        backend = self.cap.getBackendName()
+        
         logger.info(f"Loaded test video: {video_path}")
-        logger.info(f"Video properties: {frame_count} frames @ {fps:.2f} FPS")
+        logger.info(
+            f"Video properties: {frame_count} frames @ {fps:.2f} FPS, "
+            f"{width}x{height} (Backend: {backend})"
+        )
 
     def _load_test_images(self):
         """Load test images from directory (fallback mode)."""

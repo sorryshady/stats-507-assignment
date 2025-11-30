@@ -16,7 +16,7 @@ GLOBAL_WARNING_COOLDOWN = 5.0  # Minimum seconds between ANY warnings (prevents 
 HAZARD_CLASSES = ["car", "truck", "bus", "bicycle", "motorcycle", "person"]
 
 # Camera Configuration
-CAMERA_DEVICE_ID = 0  # Default webcam, adjust for iPhone
+CAMERA_DEVICE_ID = 1  # Default webcam, adjust for iPhone
 CAMERA_FPS = 30
 CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720

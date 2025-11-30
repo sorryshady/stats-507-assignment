@@ -4,6 +4,8 @@ import threading
 import time
 import logging
 import sys
+import os
+from datetime import datetime
 from queue import Queue, Empty
 from typing import Optional, List
 import numpy as np
@@ -113,13 +115,28 @@ class DualLoopSystem:
         # Visualization
         self.show_visualization = SHOW_TRACKING_VISUALIZATION
 
-    def start(self):
-        """Start the dual-loop system."""
+        # Video recording
+        self.video_writer: Optional[cv2.VideoWriter] = None
+        self.record_video = False
+        self.video_output_path: Optional[str] = None
+        self.video_width: int = 0
+        self.video_height: int = 0
+
+    def start(self, record_video: bool = False):
+        """Start the dual-loop system.
+
+        Args:
+            record_video: If True, record annotated frames to a video file in demo/ folder
+        """
         logger.info("Starting dual-loop system...")
 
         # Check Ollama connection
         if not self.narrator.check_connection():
             logger.warning("Ollama not available. Cognitive loop narration may fail.")
+
+        # Initialize video recording if requested
+        if record_video:
+            self._init_video_recording()
 
         self.running = True
 
@@ -200,6 +217,19 @@ class DualLoopSystem:
                                 self.annotated_frame,
                             )
                             cv2.waitKey(1)  # Non-blocking, just refresh display
+
+                            # Write frame to video if recording
+                            if self.record_video and self.video_writer is not None:
+                                # Ensure frame dimensions match video writer
+                                frame_to_write = self.annotated_frame
+                                h, w = frame_to_write.shape[:2]
+                                if (w, h) != (self.video_width, self.video_height):
+                                    # Resize frame to match video writer dimensions
+                                    frame_to_write = cv2.resize(
+                                        frame_to_write,
+                                        (self.video_width, self.video_height),
+                                    )
+                                self.video_writer.write(frame_to_write)
                         except Exception as e:
                             logger.debug(f"Error displaying frame: {e}")
                             # Disable visualization if it fails repeatedly
@@ -491,6 +521,53 @@ class DualLoopSystem:
             except Exception as e:
                 logger.error(f"Error in cognitive loop: {e}")
 
+    def _init_video_recording(self):
+        """Initialize video recording to demo/ folder."""
+        # Create demo folder if it doesn't exist
+        demo_dir = "demo"
+        os.makedirs(demo_dir, exist_ok=True)
+
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"demo_{timestamp}.mp4"
+        self.video_output_path = os.path.join(demo_dir, filename)
+
+        # Get actual frame dimensions from camera if available
+        frame_width = CAMERA_WIDTH
+        frame_height = CAMERA_HEIGHT
+
+        if self.camera.cap is not None:
+            # Get actual dimensions from camera
+            actual_width = int(self.camera.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            actual_height = int(self.camera.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            if actual_width > 0 and actual_height > 0:
+                frame_width = actual_width
+                frame_height = actual_height
+                logger.info(f"Using camera dimensions: {frame_width}x{frame_height}")
+
+        # Store dimensions for later use
+        self.video_width = frame_width
+        self.video_height = frame_height
+
+        # Initialize VideoWriter (MP4V codec, 30 FPS)
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        self.video_writer = cv2.VideoWriter(
+            self.video_output_path,
+            fourcc,
+            REFLEX_LOOP_FPS,
+            (frame_width, frame_height),
+        )
+
+        if self.video_writer.isOpened():
+            self.record_video = True
+            logger.info(
+                f"Video recording started: {self.video_output_path} ({frame_width}x{frame_height} @ {REFLEX_LOOP_FPS} FPS)"
+            )
+        else:
+            logger.error("Failed to initialize video writer")
+            self.video_writer = None
+            self.record_video = False
+
     def _on_key_press(self, key):
         """Handle keyboard input."""
         try:
@@ -533,6 +610,13 @@ class DualLoopSystem:
         self.camera.release()
         self.audio.stop()
 
+        # Release video writer
+        if self.video_writer is not None:
+            self.video_writer.release()
+            self.video_writer = None
+            if self.video_output_path:
+                logger.info(f"Video saved to: {self.video_output_path}")
+
         logger.info("Dual-loop system stopped")
 
 
@@ -564,6 +648,11 @@ def main():
         help="Camera device ID (overrides CAMERA_DEVICE_ID from config). "
         "Run 'python list_cameras.py' to find available cameras.",
     )
+    parser.add_argument(
+        "--record",
+        action="store_true",
+        help="Record annotated video output to demo/ folder",
+    )
     args = parser.parse_args()
 
     # If --test-video is provided, use video. Otherwise, use camera if --use-camera or not in test mode
@@ -580,7 +669,7 @@ def main():
         use_camera=use_camera,
         camera_id=camera_id,
     )
-    system.start()
+    system.start(record_video=args.record)
 
 
 if __name__ == "__main__":
