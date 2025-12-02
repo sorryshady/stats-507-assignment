@@ -1,4 +1,4 @@
-"""List available camera devices to help find iPhone Continuity Camera."""
+"""List available camera devices (helps find iPhone Continuity Camera)."""
 
 import cv2
 import sys
@@ -13,22 +13,17 @@ def list_cameras():
 
     available_cameras = []
 
-    # Try to open cameras from 0 to 10
     print("Scanning for cameras (checking IDs 0-10)...")
     print()
 
     for device_id in range(11):
         cap = cv2.VideoCapture(device_id)
         if cap.isOpened():
-            # Try to read a frame to confirm it's working
             ret, frame = cap.read()
             if ret:
-                # Get camera properties
                 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 fps = cap.get(cv2.CAP_PROP_FPS)
-
-                # Try to get backend info (may not always work)
                 backend = cap.getBackendName()
 
                 available_cameras.append(
@@ -69,7 +64,6 @@ def list_cameras():
     print()
     print("Example:")
     if available_cameras:
-        # Suggest the highest resolution camera (likely iPhone)
         highest_res = max(available_cameras, key=lambda x: x["width"] * x["height"])
         print(f"  If Camera {highest_res['id']} is your iPhone, set:")
         print(f"  CAMERA_DEVICE_ID = {highest_res['id']}")
