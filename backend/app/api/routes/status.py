@@ -8,20 +8,14 @@ router = APIRouter()
 
 @router.get("/status")
 async def get_status():
-    """
-    Get system status including model loading and GPU availability.
-
-    Returns:
-        JSON with system status, model status, and GPU information
-    """
+    """Get system status (models, GPU, etc)."""
     system_manager = get_system_manager()
 
-    # Initialize if not already initialized (lazy initialization)
     if not system_manager.initialized:
         try:
             system_manager.initialize()
         except Exception as e:
-            # Return status even if initialization fails
+            # Return status even if init fails
             return {
                 "initialized": False,
                 "error": str(e),
@@ -38,10 +32,5 @@ async def get_status():
 
 @router.get("/health")
 async def health_check():
-    """
-    Simple health check endpoint.
-
-    Returns:
-        Simple status message
-    """
+    """Simple health check."""
     return {"status": "healthy", "message": "System is running"}

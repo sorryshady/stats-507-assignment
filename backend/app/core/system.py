@@ -21,12 +21,11 @@ import time
 
 logger = logging.getLogger(__name__)
 
-# Global singleton instance
 _system_manager_instance: Optional["SystemManager"] = None
 
 
 def get_system_manager() -> "SystemManager":
-    """Get or create the global SystemManager instance."""
+    """Get or create global SystemManager."""
     global _system_manager_instance
     if _system_manager_instance is None:
         _system_manager_instance = SystemManager()
@@ -34,10 +33,10 @@ def get_system_manager() -> "SystemManager":
 
 
 class SystemManager:
-    """Manages the ML system for web requests."""
+    """Wraps ML components for web API."""
 
     def __init__(self):
-        """Initialize system manager (lazy loading)."""
+        """Initialize (lazy loading - models loaded on first use)."""
         self.tracker: Optional[YOLOTracker] = None
         self.safety_monitor: Optional[SafetyMonitor] = None
         self.history_buffer: Optional[HistoryBuffer] = None
@@ -49,7 +48,7 @@ class SystemManager:
         self._initialization_start_time: Optional[float] = None
 
     def initialize(self):
-        """Load models and initialize components."""
+        """Load models and init components."""
         if self.initialized:
             return
 
@@ -57,7 +56,6 @@ class SystemManager:
         logger.info("Initializing SystemManager...")
 
         try:
-            # Initialize tracking and safety
             logger.info("Loading YOLO tracker...")
             self.tracker = YOLOTracker()
 
@@ -67,7 +65,6 @@ class SystemManager:
             logger.info("Creating history buffer...")
             self.history_buffer = HistoryBuffer()
 
-            # Initialize cognitive components
             logger.info("Loading BLIP scene composer...")
             self.scene_composer = SceneComposer()
 
@@ -90,17 +87,7 @@ class SystemManager:
         frame_id: Optional[int] = None,
         timestamp: Optional[float] = None,
     ) -> Dict:
-        """
-        Process a single frame and return results.
-
-        Args:
-            frame: Input frame as numpy array (BGR format)
-            frame_id: Optional frame ID (auto-increments if not provided)
-            timestamp: Optional timestamp (uses current time if not provided)
-
-        Returns:
-            Dictionary with detections, hazards, and annotated frame
-        """
+        """Process a frame and return detections/hazards."""
         if not self.initialized:
             self.initialize()
 
@@ -113,7 +100,6 @@ class SystemManager:
         if timestamp is None:
             timestamp = time.time()
 
-        # Run tracking
         detections, annotated_frame = self.tracker.track(
             frame, frame_id, timestamp, return_annotated=True
         )
@@ -127,15 +113,13 @@ class SystemManager:
             )
             self.history_buffer.add_detection(object_id, detection)
 
-        # Cleanup stale objects periodically (every 30 frames)
+        # Cleanup stale objects every 30 frames
         if frame_id % 30 == 0:
             self.history_buffer.cleanup_stale_objects(frame_id)
 
-        # Check for hazards
         hazards = self.safety_monitor.check_hazards(detections, self.history_buffer)
 
-        # Convert hazards to dict format
-        # Convert numpy types to native Python types for JSON serialization
+        # Convert to dicts (numpy types -> native Python for JSON)
         hazards_list = []
         for hazard in hazards:
             hazards_list.append(
@@ -147,8 +131,6 @@ class SystemManager:
                 }
             )
 
-        # Convert detections to dict format
-        # Convert numpy types to native Python types for JSON serialization
         detections_list = []
         for detection in detections:
             detections_list.append(
@@ -171,45 +153,31 @@ class SystemManager:
             "timestamp": float(timestamp),
             "detections": detections_list,
             "hazards": hazards_list,
-            "annotated_frame": annotated_frame,  # Can be None
+            "annotated_frame": annotated_frame,
         }
 
     def generate_narration(self, frame: np.ndarray) -> Dict:
-        """
-        Generate narration for a frame.
-
-        Args:
-            frame: Input frame as numpy array (BGR format)
-
-        Returns:
-            Dictionary with narration, scene description, and object movements
-        """
+        """Generate narration for a frame."""
         if not self.initialized:
             self.initialize()
 
-        # Get scene description
         scene_description = self.scene_composer.generate_scene_description(frame)
 
-        # Analyze trajectories
         tracked_objects = self.history_buffer.get_all_objects()
 
-        # Filter out stale objects (older than 2 seconds) to prevent describing past events
+        # Only use objects from last 2 seconds (avoid describing old stuff)
         current_time = time.time()
         active_objects = {}
         for obj_id, obj in tracked_objects.items():
             latest = obj.get_latest()
-            # Check if object has a latest detection and if it's recent (< 2 seconds old)
             if latest and (current_time - latest.timestamp < 2.0):
                 active_objects[obj_id] = obj
 
         object_movements = self.trajectory_analyzer.analyze_all_objects(active_objects)
 
-        # Context-aware filtering of handheld objects
-        # If the scene description mentions a person holding an object, suppress that object's movement alerts
-        # This fixes "self-phone" narration and other held-object hallucinations
+        # Filter out handheld objects if scene says person is holding them
+        # Fixes "self-phone" and other held-object hallucinations
         scene_lower = scene_description.lower()
-
-        # Keywords that imply interaction/holding
         interaction_keywords = ["holding", "using", "carrying", "taking a", "with a"]
         is_interacting = any(k in scene_lower for k in interaction_keywords)
 
@@ -219,14 +187,12 @@ class SystemManager:
 
             for movement in object_movements:
                 movement_lower = movement.lower()
-
-                # Check if this movement describes a handheld object
                 is_handheld_movement = any(
                     cls in movement_lower for cls in handheld_classes
                 )
 
                 if is_handheld_movement:
-                    # Special Case: Phone/Camera
+                    # Phone/camera special case
                     if (
                         "cell phone" in movement_lower or "mobile" in movement_lower
                     ) and (
@@ -236,9 +202,7 @@ class SystemManager:
                     ):
                         continue
 
-                    # General Case: Object mentioned in scene
-                    # If the specific object class is mentioned in the scene description, filter it
-                    # (e.g. movement="Remote: moving...", scene="person holding a remote")
+                    # If object class is mentioned in scene, skip it
                     should_skip = False
                     for cls in handheld_classes:
                         if cls in movement_lower and cls in scene_lower:
@@ -251,7 +215,6 @@ class SystemManager:
                 filtered_movements.append(movement)
             object_movements = filtered_movements
 
-        # Generate narration
         narration = self.narrator.generate_narration_from_components(
             scene_description, object_movements
         )
@@ -263,7 +226,7 @@ class SystemManager:
         }
 
     def get_status(self) -> Dict:
-        """Get system status information."""
+        """Get system status."""
         status = {
             "initialized": self.initialized,
             "models": {},
@@ -271,7 +234,6 @@ class SystemManager:
         }
 
         if self.initialized:
-            # Check GPU availability
             import torch
 
             if torch.cuda.is_available():
@@ -281,7 +243,6 @@ class SystemManager:
             else:
                 status["gpu"] = {"available": False, "type": "cpu"}
 
-            # Check model status
             status["models"]["yolo"] = "loaded" if self.tracker else "not_loaded"
             status["models"]["blip"] = "loaded" if self.scene_composer else "not_loaded"
             status["models"]["ollama"] = (

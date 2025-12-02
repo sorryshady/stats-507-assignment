@@ -1,4 +1,4 @@
-"""FastAPI application entry point."""
+"""FastAPI app entry point."""
 
 import logging
 from contextlib import asynccontextmanager
@@ -14,18 +14,15 @@ from app.middleware.error_handler import (
     general_exception_handler,
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-# Create FastAPI app with lifespan handler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for startup and shutdown."""
-    # Startup
+    """Startup and shutdown handlers."""
     logger.info("Starting Describe My Environment API...")
     logger.info("API documentation available at /docs")
     logger.info("API endpoints:")
@@ -34,7 +31,7 @@ async def lifespan(app: FastAPI):
     logger.info("  POST /api/narration - Generate narration")
     logger.info("  WS   /api/ws/camera - Real-time frame processing")
 
-    # Pre-initialize system manager (optional - can be lazy loaded)
+    # Try to pre-init system manager, but it's ok if it fails (lazy loading)
     try:
         from app.core.system import get_system_manager
 
@@ -52,7 +49,6 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown
     logger.info("Shutting down Describe My Environment API...")
 
 
@@ -63,21 +59,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS
+# TODO: restrict CORS in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Add exception handlers
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
-# Include routers
 app.include_router(status.router, prefix="/api", tags=["status"])
 app.include_router(camera.router, prefix="/api", tags=["camera"])
 app.include_router(narration.router, prefix="/api", tags=["narration"])
@@ -85,7 +79,7 @@ app.include_router(narration.router, prefix="/api", tags=["narration"])
 
 @app.get("/")
 def root():
-    """Root endpoint - API information."""
+    """Root endpoint."""
     return {
         "status": "running",
         "message": "Describe My Environment API",

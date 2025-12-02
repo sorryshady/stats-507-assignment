@@ -29,18 +29,14 @@ def test_status_endpoint():
     response = client.get("/api/status")
     assert response.status_code == 200
     data = response.json()
-    
-    # Check required fields
+
     assert "initialized" in data
     assert "models" in data
     assert "gpu" in data
-    
-    # Check models structure
+
     assert "yolo" in data["models"]
     assert "blip" in data["models"]
     assert "ollama" in data["models"]
-    
-    # Check GPU structure
+
     assert "available" in data["gpu"]
     assert "type" in data["gpu"]
-
