@@ -22,13 +22,7 @@ class TrackedObject:
     """Manages detection history for a single tracked object."""
     
     def __init__(self, object_id: int, maxlen: int = 90):
-        """
-        Initialize a tracked object.
-        
-        Args:
-            object_id: Unique tracking ID from YOLO
-            maxlen: Maximum number of detection points to store
-        """
+        """Initialize a tracked object."""
         self.object_id = object_id
         self.history: deque = deque(maxlen=maxlen)
         self.first_seen: Optional[float] = None
@@ -45,15 +39,7 @@ class TrackedObject:
             self.class_name = detection_point.class_name
     
     def get_trajectory(self, frames_back: Optional[int] = None) -> List[DetectionPoint]:
-        """
-        Get trajectory points.
-        
-        Args:
-            frames_back: Number of frames to look back (None = all)
-        
-        Returns:
-            List of DetectionPoint objects
-        """
+        """Get trajectory points."""
         if frames_back is None:
             return list(self.history)
         return list(self.history)[-frames_back:]

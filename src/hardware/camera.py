@@ -24,16 +24,7 @@ class CameraHandler:
         test_images_dir: str = "test_images",
         use_camera: bool = False,
     ):
-        """
-        Initialize camera handler.
-
-        Args:
-            device_id: Camera device ID (0 for default webcam)
-            test_mode: If True, enable test mode features (logging, etc.)
-            test_video_path: Path to test video file (if provided, uses video instead of camera)
-            test_images_dir: Directory containing test images (fallback if no video)
-            use_camera: If True, use camera even in test mode (test_mode + camera)
-        """
+        """Initialize camera handler."""
         self.device_id = device_id
         self.test_mode = test_mode
         self.test_video_path = test_video_path
@@ -44,15 +35,11 @@ class CameraHandler:
         self.test_image_index = 0
         self.using_video = False
 
-        # Determine input source
         if test_video_path:
-            # Use test video if provided
             self._load_test_video(test_video_path)
         elif use_camera or not test_mode:
-            # Use camera if explicitly requested or not in test mode
             self._initialize_camera()
         else:
-            # Fallback to test images
             self._load_test_images()
 
     def _initialize_camera(self):
@@ -65,18 +52,15 @@ class CameraHandler:
                     f"Run 'python list_cameras.py' to find available cameras."
                 )
 
-            # Get actual camera properties before setting
             actual_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             actual_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             actual_fps = self.cap.get(cv2.CAP_PROP_FPS)
             backend = self.cap.getBackendName()
 
-            # Set desired camera properties (may not always be supported)
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
             self.cap.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
 
-            # Get final properties (may differ from requested)
             final_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             final_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             final_fps = self.cap.get(cv2.CAP_PROP_FPS)
@@ -86,7 +70,6 @@ class CameraHandler:
                 f"(Backend: {backend})"
             )
 
-            # Warn if resolution differs significantly (might indicate wrong camera)
             if final_width >= 1920 or final_height >= 1080:
                 logger.info(
                     "High resolution detected - this might be iPhone Continuity Camera"
@@ -105,7 +88,6 @@ class CameraHandler:
             self._load_test_images()
             return
 
-        # Try to open video file
         self.cap = cv2.VideoCapture(str(video_file))
         if not self.cap.isOpened():
             logger.error(f"Failed to open test video: {video_path}")
@@ -120,7 +102,6 @@ class CameraHandler:
             self._load_test_images()
             return
 
-        # Verify we can actually read frames
         ret, test_frame = self.cap.read()
         if not ret or test_frame is None:
             logger.error(f"Failed to read frames from video: {video_path}")
@@ -131,7 +112,6 @@ class CameraHandler:
             self._load_test_images()
             return
 
-        # Reset to beginning after test read
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
         self.using_video = True
@@ -140,7 +120,7 @@ class CameraHandler:
         width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         backend = self.cap.getBackendName()
-        
+
         logger.info(f"Loaded test video: {video_path}")
         logger.info(
             f"Video properties: {frame_count} frames @ {fps:.2f} FPS, "
@@ -154,7 +134,6 @@ class CameraHandler:
             logger.warning(f"Test images directory {self.test_images_dir} not found")
             return
 
-        # Load common image formats
         extensions = ["*.jpg", "*.jpeg", "*.png", "*.bmp"]
         for ext in extensions:
             self.test_images.extend(glob.glob(str(test_path / ext)))
@@ -166,26 +145,14 @@ class CameraHandler:
         )
 
     def read_frame(self) -> Tuple[bool, Optional[np.ndarray], Optional[str]]:
-        """
-        Read a frame from camera, test video, or test images.
-
-        Returns:
-            Tuple of (success, frame, source_name) where:
-            - success: bool indicating if frame was read successfully
-            - frame: numpy array or None
-            - source_name: str source identifier (video filename, image name, "camera", or None)
-        """
+        """Read a frame from camera, test video, or test images."""
         if self.using_video:
             return self._read_test_video_frame()
         elif self.cap is not None:
-            # Using camera
             success, frame = self._read_camera_frame()
-            source_name = (
-                "camera" if self.test_mode else None
-            )  # Include source name in test mode
+            source_name = "camera" if self.test_mode else None
             return success, frame, source_name
         else:
-            # Using test images
             return self._read_test_frame()
 
     def _read_camera_frame(self) -> Tuple[bool, Optional[np.ndarray]]:
@@ -210,7 +177,6 @@ class CameraHandler:
         ret, frame = self.cap.read()
 
         if not ret:
-            # Video ended, loop back to beginning
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             ret, frame = self.cap.read()
 
@@ -218,13 +184,11 @@ class CameraHandler:
                 logger.warning("Failed to read from test video")
                 return False, None, None
 
-        # Get video filename for logging
         video_name = (
             Path(self.test_video_path).name if self.test_video_path else "test_video"
         )
         current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
 
-        # Add frame number to identifier
         source_name = f"{video_name} (frame {current_frame})"
 
         return True, frame, source_name
@@ -242,15 +206,12 @@ class CameraHandler:
             logger.warning(f"Failed to load test image: {img_path}")
             return False, None, None
 
-        # Get image name for logging
         from pathlib import Path
 
         image_name = Path(img_path).name
 
-        # Cycle through images
         self.test_image_index = (self.test_image_index + 1) % len(self.test_images)
 
-        # Add small delay to simulate realistic frame rate
         import time
 
         time.sleep(1.0 / CAMERA_FPS)

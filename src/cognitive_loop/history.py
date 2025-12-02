@@ -13,92 +13,54 @@ logger = logging.getLogger(__name__)
 
 class HistoryBuffer:
     """Thread-safe history buffer for tracked objects."""
-    
+
     def __init__(self, maxlen: int = HISTORY_BUFFER_SIZE):
-        """
-        Initialize history buffer.
-        
-        Args:
-            maxlen: Maximum number of detection points per object
-        """
+        """Initialize history buffer."""
         self.maxlen = maxlen
         self.tracked_objects: Dict[int, TrackedObject] = {}
         self.lock = threading.Lock()
         self.frame_count = 0
-    
+
     def add_detection(self, object_id: int, detection_point: DetectionPoint):
-        """
-        Add a detection point for an object.
-        
-        Args:
-            object_id: Unique tracking ID
-            detection_point: DetectionPoint to add
-        """
+        """Add a detection point for an object."""
         with self.lock:
             if object_id not in self.tracked_objects:
-                self.tracked_objects[object_id] = TrackedObject(object_id, maxlen=self.maxlen)
-            
+                self.tracked_objects[object_id] = TrackedObject(
+                    object_id, maxlen=self.maxlen
+                )
+
             self.tracked_objects[object_id].add_detection(detection_point)
             self.frame_count = max(self.frame_count, detection_point.frame_id)
-    
-    def get_trajectory(self, object_id: int, frames_back: Optional[int] = None) -> List[DetectionPoint]:
-        """
-        Get trajectory for an object.
-        
-        Args:
-            object_id: Unique tracking ID
-            frames_back: Number of frames to look back (None = all)
-        
-        Returns:
-            List of DetectionPoint objects
-        """
+
+    def get_trajectory(
+        self, object_id: int, frames_back: Optional[int] = None
+    ) -> List[DetectionPoint]:
+        """Get trajectory for an object."""
         with self.lock:
             if object_id not in self.tracked_objects:
                 return []
             return self.tracked_objects[object_id].get_trajectory(frames_back)
-    
+
     def get_all_objects(self) -> Dict[int, TrackedObject]:
-        """
-        Get all tracked objects.
-        
-        Returns:
-            Dictionary mapping object_id to TrackedObject
-        """
+        """Get all tracked objects."""
         with self.lock:
             return self.tracked_objects.copy()
-    
+
     def get_object(self, object_id: int) -> Optional[TrackedObject]:
-        """
-        Get a specific tracked object.
-        
-        Args:
-            object_id: Unique tracking ID
-        
-        Returns:
-            TrackedObject or None if not found
-        """
+        """Get a specific tracked object."""
         with self.lock:
             return self.tracked_objects.get(object_id)
-    
+
     def remove_object(self, object_id: int):
-        """
-        Remove a tracked object.
-        
-        Args:
-            object_id: Unique tracking ID to remove
-        """
+        """Remove a tracked object."""
         with self.lock:
             if object_id in self.tracked_objects:
                 del self.tracked_objects[object_id]
-    
-    def cleanup_stale_objects(self, current_frame_id: int, max_frames_missing: int = 30):
-        """
-        Remove objects that haven't been seen for a while.
-        
-        Args:
-            current_frame_id: Current frame ID
-            max_frames_missing: Maximum frames an object can be missing before removal
-        """
+
+    def cleanup_stale_objects(
+        self, current_frame_id: int, max_frames_missing: int = 30
+    ):
+        """Remove objects that haven't been seen for a while."""
         with self.lock:
             stale_ids = []
             for obj_id, tracked_obj in self.tracked_objects.items():
@@ -107,10 +69,9 @@ class HistoryBuffer:
                     stale_ids.append(obj_id)
                 elif current_frame_id - latest.frame_id > max_frames_missing:
                     stale_ids.append(obj_id)
-            
+
             for obj_id in stale_ids:
                 del self.tracked_objects[obj_id]
-            
+
             if stale_ids:
                 logger.debug(f"Cleaned up {len(stale_ids)} stale objects")
-
