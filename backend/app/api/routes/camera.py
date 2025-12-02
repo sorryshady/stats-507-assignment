@@ -142,8 +142,7 @@ async def websocket_camera(websocket: WebSocket):
                     pending_data, pending_id, pending_ts = pending_frame
                     pending_frame = None
                     processing = True
-                    current_frame_id = frame_id
-                    frame_id += 1
+                    current_frame_id = pending_id
                     asyncio.create_task(
                         process_frame_async(pending_data, current_frame_id, pending_ts)
                     )
