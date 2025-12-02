@@ -32,7 +32,6 @@ from src.cognitive_loop.trajectory import TrajectoryAnalyzer
 from src.cognitive_loop.narrator import LLMNarrator
 from src.utils.threading import ThreadSafeQueue
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -49,18 +48,10 @@ class DualLoopSystem:
         use_camera: bool = False,
         camera_id: Optional[int] = None,
     ):
-        """
-        Initialize dual-loop system.
-
-        Args:
-            test_mode: If True, enable test mode features (logging, etc.)
-            test_video_path: Path to test video file (if provided, uses video instead of camera)
-            use_camera: If True, use camera even in test mode (test_mode + camera)
-        """
+        """Initialize dual-loop system."""
         self.test_mode = test_mode
         self.running = False
 
-        # Hardware
         from src.config import CAMERA_DEVICE_ID
 
         device_id = camera_id if camera_id is not None else CAMERA_DEVICE_ID
@@ -72,55 +63,40 @@ class DualLoopSystem:
         )
         self.audio = AudioHandler()
 
-        # Tracking and safety
         self.tracker = YOLOTracker()
         self.safety_monitor = SafetyMonitor(CAMERA_WIDTH, CAMERA_HEIGHT)
 
-        # Cognitive components
         self.history_buffer = HistoryBuffer()
         self.scene_composer = SceneComposer()
         self.trajectory_analyzer = TrajectoryAnalyzer()
         self.narrator = LLMNarrator()
 
-        # Threading
         self.reflex_queue = ThreadSafeQueue(maxsize=5)
         self.cognitive_queue = ThreadSafeQueue(maxsize=1)
         self.reflex_thread: Optional[threading.Thread] = None
         self.cognitive_thread: Optional[threading.Thread] = None
 
-        # Frame tracking
         self.frame_id = 0
         self.current_frame: Optional[np.ndarray] = None
-        self.current_image_name: Optional[str] = (
-            None  # For test mode image identification
-        )
-        self.annotated_frame: Optional[np.ndarray] = None  # For visualization
+        self.current_image_name: Optional[str] = None
+        self.annotated_frame: Optional[np.ndarray] = None
         self.frame_lock = threading.Lock()
 
-        # Keyboard listener
         self.keyboard_listener: Optional[keyboard.Listener] = None
 
-        # Warning rate limiting
         self.last_warning_time = 0
-        self.warning_cooldown = (
-            1.0  # Minimum seconds between spoken warnings (reduced for faster response)
-        )
-        self.last_warned_hazard_id = None  # Track which hazard we last warned about
-        self.hazard_warning_cooldown = 3.0  # Don't warn about same hazard for 3 seconds
+        self.warning_cooldown = 1.0
+        self.last_warned_hazard_id = None
+        self.hazard_warning_cooldown = 3.0
         from src.config import GLOBAL_WARNING_COOLDOWN
 
-        self.global_warning_cooldown = (
-            GLOBAL_WARNING_COOLDOWN  # Global cooldown for ALL warnings (5 seconds)
-        )
+        self.global_warning_cooldown = GLOBAL_WARNING_COOLDOWN
 
-        # Visualization
         self.show_visualization = SHOW_TRACKING_VISUALIZATION
 
-        # Visual warning persistence (keep warning visible for minimum duration)
         self.last_hazard_detection_time = 0.0
         self.visual_warning_duration = VISUAL_WARNING_PERSISTENCE_DURATION
 
-        # Video recording
         self.video_writer: Optional[cv2.VideoWriter] = None
         self.record_video = False
         self.video_output_path: Optional[str] = None
@@ -128,34 +104,25 @@ class DualLoopSystem:
         self.video_height: int = 0
 
     def start(self, record_video: bool = False):
-        """Start the dual-loop system.
-
-        Args:
-            record_video: If True, record annotated frames to a video file in demo/ folder
-        """
+        """Start the dual-loop system."""
         logger.info("Starting dual-loop system...")
 
-        # Check Ollama connection
         if not self.narrator.check_connection():
             logger.warning("Ollama not available. Cognitive loop narration may fail.")
 
-        # Initialize video recording if requested
         if record_video:
             self._init_video_recording()
 
         self.running = True
 
-        # Start reflex loop thread
         self.reflex_thread = threading.Thread(target=self._reflex_loop, daemon=True)
         self.reflex_thread.start()
 
-        # Start cognitive loop thread
         self.cognitive_thread = threading.Thread(
             target=self._cognitive_loop, daemon=True
         )
         self.cognitive_thread.start()
 
-        # Start keyboard listener
         self.keyboard_listener = keyboard.Listener(on_press=self._on_key_press)
         self.keyboard_listener.start()
 
@@ -176,7 +143,6 @@ class DualLoopSystem:
                 "Dual-loop system started. Press SPACE for narration, ESC to exit."
             )
 
-        # Main loop: capture frames
         try:
             self._main_loop()
         except KeyboardInterrupt:
@@ -191,28 +157,24 @@ class DualLoopSystem:
         while self.running:
             start_time = time.time()
 
-            # Read frame
             success, frame, image_name = self.camera.read_frame()
             if not success:
                 logger.warning("Failed to read frame")
                 time.sleep(0.1)
                 continue
 
-            # Update current frame
             with self.frame_lock:
                 self.current_frame = frame.copy()
-                self.current_image_name = image_name  # Store image name for test mode
+                self.current_image_name = image_name
                 self.frame_id += 1
 
-            # Put frame in reflex queue (non-blocking)
             try:
                 self.reflex_queue.put(
                     (self.frame_id, frame.copy(), time.time(), image_name), block=False
                 )
             except:
-                pass  # Queue full, skip this frame
+                pass
 
-            # Display visualization in main thread (OpenCV requires main thread)
             if self.show_visualization:
                 with self.frame_lock:
                     if self.annotated_frame is not None:
@@ -221,15 +183,12 @@ class DualLoopSystem:
                                 "Describe My Environment - Tracking",
                                 self.annotated_frame,
                             )
-                            cv2.waitKey(1)  # Non-blocking, just refresh display
+                            cv2.waitKey(1)
 
-                            # Write frame to video if recording
                             if self.record_video and self.video_writer is not None:
-                                # Ensure frame dimensions match video writer
                                 frame_to_write = self.annotated_frame
                                 h, w = frame_to_write.shape[:2]
                                 if (w, h) != (self.video_width, self.video_height):
-                                    # Resize frame to match video writer dimensions
                                     frame_to_write = cv2.resize(
                                         frame_to_write,
                                         (self.video_width, self.video_height),
@@ -237,10 +196,8 @@ class DualLoopSystem:
                                 self.video_writer.write(frame_to_write)
                         except Exception as e:
                             logger.debug(f"Error displaying frame: {e}")
-                            # Disable visualization if it fails repeatedly
                             pass
 
-            # Sleep to maintain FPS
             elapsed = time.time() - start_time
             sleep_time = max(0, frame_time - elapsed)
             time.sleep(sleep_time)
@@ -251,19 +208,16 @@ class DualLoopSystem:
 
         while self.running:
             try:
-                # Get frame from queue
                 item = self.reflex_queue.get(timeout=0.1)
                 if item is None:
                     continue
 
-                # Unpack with image_name (may be None in camera mode)
                 if len(item) == 4:
                     frame_id, frame, timestamp, image_name = item
                 else:
                     frame_id, frame, timestamp = item
                     image_name = None
 
-                # Run tracking with optional visualization
                 result = self.tracker.track(
                     frame, frame_id, timestamp, return_annotated=self.show_visualization
                 )
@@ -274,30 +228,23 @@ class DualLoopSystem:
                     detections, _ = result
                     annotated_frame = None
 
-                # Update history buffer
                 for detection in detections:
-                    # Use track_id if available, otherwise create hash-based ID
                     if detection.track_id is not None:
                         object_id = detection.track_id
                     else:
-                        # Fallback: use hash of box and class for consistent ID
                         object_id = hash(
                             (tuple(detection.box), detection.class_name)
                         ) % (2**31)
                     self.history_buffer.add_detection(object_id, detection)
 
-                # Check for hazards BEFORE storing frame
                 hazards = self.safety_monitor.check_hazards(
                     detections, self.history_buffer
                 )
 
-                # Update last hazard detection time if hazards are present
                 current_time = time.time()
                 if hazards:
                     self.last_hazard_detection_time = current_time
 
-                # Add visual warning to annotated frame if hazards detected OR within persistence window
-                # This ensures warning stays visible for minimum duration even if hazard condition is brief
                 time_since_last_hazard = current_time - self.last_hazard_detection_time
                 should_show_warning = (
                     hazards or time_since_last_hazard < self.visual_warning_duration
@@ -318,29 +265,24 @@ class DualLoopSystem:
                         3,
                     )
 
-                # Store annotated frame for main thread to display (OpenCV requires main thread)
-                # Frame is stored ONCE with all annotations (including hazard warning if present)
                 if self.show_visualization and annotated_frame is not None:
                     with self.frame_lock:
                         self.annotated_frame = annotated_frame.copy()
 
-                # Trigger warning if needed (with rate limiting)
                 if self.safety_monitor.should_warn(hazards):
                     current_time = time.time()
 
-                    # GLOBAL COOLDOWN: Don't warn if ANY warning was fired recently (5 seconds)
                     time_since_last_warning = current_time - self.last_warning_time
                     if time_since_last_warning < self.global_warning_cooldown:
                         logger.debug(
                             f"Skipping warning - global cooldown active "
                             f"(last warning {time_since_last_warning:.2f}s ago, need {self.global_warning_cooldown}s)"
                         )
-                        continue  # Skip this frame's warning entirely
+                        continue
 
                     warning_msg = self.safety_monitor.get_warning_message(hazards)
                     high_priority = any(h.priority == "high" for h in hazards)
 
-                    # Get the hazard ID (use first high priority hazard, or first hazard)
                     current_hazard_id = None
                     if high_priority:
                         high_priority_hazards = [
@@ -352,27 +294,21 @@ class DualLoopSystem:
                         if hazards:
                             current_hazard_id = hazards[0].object_id
 
-                    # Check if this is the same hazard we just warned about (additional check)
                     is_same_hazard = (
                         current_hazard_id is not None
                         and current_hazard_id == self.last_warned_hazard_id
                     )
 
-                    # If same hazard and within cooldown, skip (redundant check, but keep for logging)
                     if is_same_hazard:
                         if time_since_last_warning < self.hazard_warning_cooldown:
                             logger.debug(
                                 f"Skipping warning - same hazard still active "
                                 f"(last warned {time_since_last_warning:.2f}s ago)"
                             )
-                            continue  # Skip this frame's warning entirely
+                            continue
 
-                    # In test mode, include image name and reduce logging noise
                     if self.test_mode and TEST_MODE_QUIET_HAZARDS:
-                        # Only log high priority hazards in test mode
-                        if (
-                            high_priority and frame_id % 30 == 0
-                        ):  # Log every 30 frames max
+                        if high_priority and frame_id % 30 == 0:
                             img_info = f" [{image_name}]" if image_name else ""
                             logger.info(f"HAZARD (test mode{img_info}): {warning_msg}")
                     else:
@@ -383,44 +319,32 @@ class DualLoopSystem:
                         )
                         logger.warning(f"HAZARD{img_info}: {warning_msg}")
 
-                    # Audio handling with better rate limiting
                     if not (self.test_mode and TEST_MODE_DISABLE_AUDIO):
 
-                        # Check if object is too close (already very large) - don't beep constantly
-                        # This prevents spam when user is close to camera
                         should_beep = True
                         if high_priority:
-                            # Check if any hazard object is very large (too close)
                             for hazard in hazards:
                                 if hazard.priority == "high":
-                                    # Get the detection for this hazard
                                     hazard_obj = self.history_buffer.get_object(
                                         hazard.object_id
                                     )
                                     if hazard_obj:
                                         latest = hazard_obj.get_latest()
                                         if latest:
-                                            # If bounding box area is very large (>40% of frame), it's too close
                                             frame_area = (
                                                 self.safety_monitor.frame_width
                                                 * self.safety_monitor.frame_height
                                             )
                                             area_ratio = latest.area / frame_area
-                                            if (
-                                                area_ratio > 0.4
-                                            ):  # Object takes up >40% of frame (increased threshold)
+                                            if area_ratio > 0.4:
                                                 should_beep = False
                                                 logger.debug(
                                                     f"Suppressing beep - object too close (area ratio: {area_ratio:.2f})"
                                                 )
                                                 break
 
-                        # Beep first (prioritized), then speech provides context
-                        # This way users get immediate warning signal, then details
                         if high_priority:
-                            # Play beep first for immediate attention
                             if should_beep:
-                                # Use longer cooldown for hazard beeps
                                 if (
                                     current_time - self.audio.last_hazard_beep_time
                                 ) >= self.audio.hazard_beep_cooldown:
@@ -434,20 +358,13 @@ class DualLoopSystem:
                                         f"Beep on cooldown ({current_time - self.audio.last_hazard_beep_time:.2f}s < {self.audio.hazard_beep_cooldown}s)"
                                     )
 
-                            # Then speak warning (will wait for beep to finish)
-                            # Global cooldown already checked above, so we can speak here
                             logger.info(
                                 f"Speaking hazard warning after beep: {warning_msg}"
                             )
-                            # Speech will wait for beep to finish automatically
                             self.audio.speak_text(warning_msg, priority=True)
-                            self.last_warning_time = (
-                                current_time  # Update global warning time
-                            )
-                            # Remember which hazard we warned about
+                            self.last_warning_time = current_time
                             self.last_warned_hazard_id = current_hazard_id
 
-                # Cleanup stale objects periodically
                 if frame_id % 30 == 0:
                     self.history_buffer.cleanup_stale_objects(frame_id)
 
@@ -462,14 +379,12 @@ class DualLoopSystem:
 
         while self.running:
             try:
-                # Wait for trigger (SPACE key)
                 item = self.cognitive_queue.get(timeout=0.5)
                 if item is None:
                     continue
 
                 logger.info("Cognitive loop triggered")
 
-                # Get current frame snapshot
                 with self.frame_lock:
                     if self.current_frame is None:
                         continue
@@ -477,24 +392,20 @@ class DualLoopSystem:
                     current_frame_id = self.frame_id
                     current_image_name = self.current_image_name
 
-                # Log which image is being processed (test mode)
                 if self.test_mode and current_image_name:
                     logger.info(f"Processing image: {current_image_name}")
 
-                # Step 1: Generate scene description
                 scene_description = self.scene_composer.generate_scene_description(
                     frame
                 )
                 logger.debug(f"Scene: {scene_description}")
 
-                # Step 2: Analyze trajectories
                 tracked_objects = self.history_buffer.get_all_objects()
                 object_movements = self.trajectory_analyzer.analyze_all_objects(
                     tracked_objects
                 )
                 logger.debug(f"Movements: {object_movements}")
 
-                # Debug inputs to LLM in test mode
                 if self.test_mode:
                     logger.info("--- INPUTS TO LLM ---")
                     logger.info(f"Scene Description: {scene_description}")
@@ -506,19 +417,16 @@ class DualLoopSystem:
                         logger.info("Detected Objects: None")
                     logger.info("---------------------")
 
-                # Step 3: Generate narration
                 narration = self.narrator.generate_narration_from_components(
                     scene_description, object_movements
                 )
 
                 if narration:
-                    # Include image name in test mode
                     if self.test_mode and current_image_name:
                         logger.info(f"Narration [{current_image_name}]: {narration}")
                     else:
                         logger.info(f"Narration: {narration}")
 
-                    # Always speak narration from cognitive loop (user requested it)
                     logger.info(f"Speaking narration: {narration[:50]}...")
                     try:
                         self.audio.speak_text(narration, priority=False)
@@ -530,7 +438,6 @@ class DualLoopSystem:
                         logger.error(traceback.format_exc())
                 else:
                     logger.warning("Failed to generate narration")
-                    # Fallback: speak scene description
                     logger.info("Speaking fallback scene description...")
                     self.audio.speak_text(f"Scene: {scene_description}", priority=False)
 
@@ -541,21 +448,17 @@ class DualLoopSystem:
 
     def _init_video_recording(self):
         """Initialize video recording to demo/ folder."""
-        # Create demo folder if it doesn't exist
         demo_dir = "demo"
         os.makedirs(demo_dir, exist_ok=True)
 
-        # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"demo_{timestamp}.mp4"
         self.video_output_path = os.path.join(demo_dir, filename)
 
-        # Get actual frame dimensions from camera if available
         frame_width = CAMERA_WIDTH
         frame_height = CAMERA_HEIGHT
 
         if self.camera.cap is not None:
-            # Get actual dimensions from camera
             actual_width = int(self.camera.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             actual_height = int(self.camera.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             if actual_width > 0 and actual_height > 0:
@@ -563,11 +466,9 @@ class DualLoopSystem:
                 frame_height = actual_height
                 logger.info(f"Using camera dimensions: {frame_width}x{frame_height}")
 
-        # Store dimensions for later use
         self.video_width = frame_width
         self.video_height = frame_height
 
-        # Initialize VideoWriter (MP4V codec, 30 FPS)
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         self.video_writer = cv2.VideoWriter(
             self.video_output_path,
@@ -606,29 +507,23 @@ class DualLoopSystem:
         logger.info("Stopping dual-loop system...")
         self.running = False
 
-        # Stop audio handler (stops worker thread and clears queue)
         if self.audio:
             self.audio.stop()
 
-        # Close visualization window
         if self.show_visualization:
             cv2.destroyAllWindows()
 
-        # Wait for threads
         if self.reflex_thread:
             self.reflex_thread.join(timeout=2.0)
         if self.cognitive_thread:
             self.cognitive_thread.join(timeout=2.0)
 
-        # Stop keyboard listener
         if self.keyboard_listener:
             self.keyboard_listener.stop()
 
-        # Release resources
         self.camera.release()
         self.audio.stop()
 
-        # Release video writer
         if self.video_writer is not None:
             self.video_writer.release()
             self.video_writer = None

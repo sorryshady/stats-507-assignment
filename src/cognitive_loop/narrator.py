@@ -14,13 +14,7 @@ class LLMNarrator:
     """Generates narration using Llama 3.2 via Ollama."""
 
     def __init__(self, api_url: str = OLLAMA_API_URL, model: str = OLLAMA_MODEL):
-        """
-        Initialize LLM narrator.
-
-        Args:
-            api_url: Ollama API URL
-            model: Model name (e.g., "llama3.2:3b")
-        """
+        """Initialize LLM narrator."""
         self.api_url = api_url
         self.model = model
         self.api_endpoint = f"{api_url}/api/generate"
@@ -28,16 +22,7 @@ class LLMNarrator:
     def compose_prompt(
         self, scene_description: str, object_movements: List[str]
     ) -> str:
-        """
-        Compose prompt for LLM.
-
-        Args:
-            scene_description: Scene description from BLIP
-            object_movements: List of movement description strings
-
-        Returns:
-            Formatted prompt string
-        """
+        """Compose prompt for LLM."""
         # Format object movements
         if object_movements:
             entities_text = "\n".join(
@@ -66,27 +51,16 @@ IMPORTANT RULES:
         return prompt
 
     def generate_narration(self, prompt: str, timeout: float = 10.0) -> Optional[str]:
-        """
-        Generate narration from prompt using Ollama.
-
-        Args:
-            prompt: Input prompt
-            timeout: Request timeout in seconds
-
-        Returns:
-            Generated narration string or None if error
-        """
+        """Generate narration from prompt using Ollama."""
         try:
             payload = {
                 "model": self.model,
                 "prompt": prompt,
                 "stream": False,
                 "options": {
-                    "temperature": 0.3,  # Lower temperature for more focused, less creative output
+                    "temperature": 0.3,
                     "top_p": 0.9,
-                    "num_predict": 100,  # Limit response length
-                    # Note: Ollama automatically uses Metal GPU on Mac when available
-                    # GPU acceleration is handled by Ollama server, not via API
+                    "num_predict": 100,
                 },
             }
 
@@ -96,7 +70,6 @@ IMPORTANT RULES:
                 result = response.json()
                 narration = result.get("response", "").strip()
 
-                # Clean up narration: remove follow-up questions and extra verbosity
                 narration = self._clean_narration(narration)
 
                 return narration
@@ -117,12 +90,7 @@ IMPORTANT RULES:
             return None
 
     def check_connection(self) -> bool:
-        """
-        Check if Ollama is available.
-
-        Returns:
-            True if connection successful
-        """
+        """Check if Ollama is available."""
         try:
             response = requests.get(f"{self.api_url}/api/tags", timeout=2.0)
             return response.status_code == 200
@@ -130,15 +98,7 @@ IMPORTANT RULES:
             return False
 
     def _clean_narration(self, narration: str) -> str:
-        """
-        Clean narration to remove follow-up questions and extra verbosity.
-
-        Args:
-            narration: Raw narration from LLM
-
-        Returns:
-            Cleaned narration string
-        """
+        """Clean narration to remove follow-up questions and extra verbosity."""
         # Remove common follow-up patterns
         patterns_to_remove = [
             r"Is there anything else I can assist you with\?.*",
@@ -155,14 +115,11 @@ IMPORTANT RULES:
         for pattern in patterns_to_remove:
             cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE | re.DOTALL)
 
-        # Remove multiple consecutive periods/spaces
         cleaned = re.sub(r"\.{2,}", ".", cleaned)
         cleaned = re.sub(r"\s+", " ", cleaned)
         cleaned = cleaned.strip()
 
-        # If narration ends with a question mark, try to convert to statement
         if cleaned.endswith("?"):
-            # Remove question marks at the end if it's asking for follow-up
             if any(
                 phrase in cleaned.lower()
                 for phrase in ["anything else", "need help", "assist", "let me know"]
@@ -174,15 +131,6 @@ IMPORTANT RULES:
     def generate_narration_from_components(
         self, scene_description: str, object_movements: List[str]
     ) -> Optional[str]:
-        """
-        Generate narration from scene and movement components.
-
-        Args:
-            scene_description: Scene description from BLIP
-            object_movements: List of movement description strings
-
-        Returns:
-            Generated narration string or None if error
-        """
+        """Generate narration from scene and movement components."""
         prompt = self.compose_prompt(scene_description, object_movements)
         return self.generate_narration(prompt)

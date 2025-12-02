@@ -9,12 +9,7 @@ class ThreadSafeQueue:
     """Thread-safe queue wrapper with timeout support."""
     
     def __init__(self, maxsize: int = 0):
-        """
-        Initialize thread-safe queue.
-        
-        Args:
-            maxsize: Maximum queue size (0 = unlimited)
-        """
+        """Initialize thread-safe queue."""
         self._queue = Queue(maxsize=maxsize)
         self._lock = threading.Lock()
     
