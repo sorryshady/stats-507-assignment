@@ -196,7 +196,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 **Note:** The `.env.local` file configures the API and WebSocket URLs. Default values point to `http://localhost:8000` for the backend.
 
-### 4. Run the CLI Application (Legacy)
+### 4. Run the CLI Application
 
 ```bash
 python run.py
